@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <memory.h>
 
-
+Shader defaultShader;
+Shader errorShader;
 
 //=========================================
 // Initialization
@@ -28,15 +29,24 @@ GLFWwindow* CreateGLFWWindow(int width, int height, char* tittle) {
 
     glfwMakeContextCurrent(window);
 
+    return window;
+}
+
+void InitializeRenderer() {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         printf("Failed to Initialie GLAD!!! \n");
         glfwTerminate();
-        return NULL;
+        return;
     }
+
     glfwSwapInterval(1);
 
-    return window;
+    defaultShader = LoadShaderSource(DefaultVertexShader, DefaultFragmentShader);
+    errorShader = LoadShaderSource(DefaultVertexShader, ErrorFragmentShader);
+
+    assert(defaultShader.isValid);
+    assert(errorShader.isValid);
 }
 
 //=========================================
@@ -45,14 +55,12 @@ GLFWwindow* CreateGLFWWindow(int width, int height, char* tittle) {
 
 Shader LoadShaderSource(const char *vertexShaderCode, const char *fragmentShaderCode)
 {
-    // @TODO: In case of errors in compiling shaders return debug shader
-
-    Shader ret;
-    ret.isValid = false;
+    Shader ret = {0};
 
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
     glCompileShader(vertexShader);
+
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -103,9 +111,6 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     char *vertexSource = NULL;
     char *fragmentSource = NULL;
 
-    Shader shader;
-    shader.isValid = false;
-
     FILE *vertexFile = fopen(vertexPath, "rb");
     if (vertexFile)
     {
@@ -121,8 +126,9 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     }
     else
     {
+        // @TODO, LEAK vertexSource, fragmentSource
         printf("[ERROR] Failed to open vertex shader source file at path: %s\n", vertexPath);
-        return shader;
+        return {0};
     }
 
     FILE *fragmentFile = fopen(fragmentPath, "rb");
@@ -140,11 +146,12 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     }
     else
     {
+        // @TODO, LEAK vertexSource, fragmentSource
         printf("[ERROR] Failed to open fragment shader source file at path: %s\n", fragmentPath);
-        return shader;
+        return {0};
     }
 
-    shader = LoadShaderSource(vertexSource, fragmentSource);
+    Shader shader = LoadShaderSource(vertexSource, fragmentSource);
 
     free(vertexSource);
     free(fragmentSource);
@@ -159,12 +166,21 @@ void SetUniformFloat(Shader shader, char *name, float value) {
     {
         glUniform1f(loc, value);
     }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform Float: %s\n", name);
+    }
 }
 
 void SetUniformVec2(Shader shader, char *name, Vector2 value) {
     glUseProgram(shader.id);
-    int loc = glGetUniformLocation(shader.id, name); {
+    int loc = glGetUniformLocation(shader.id, name);
+    if(loc != -1) {
         glUniform2f(loc, value.X, value.Y);
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform Vec2: %s\n", name);
     }
 }
 
@@ -174,6 +190,10 @@ void SetUniformVec3(Shader shader, char *name, Vector3 value){
     if (loc != -1) {
         glUniform3f(loc, value.X, value.Y, value.Z);
     }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform Vec3: %s\n", name);
+    }
 }
 
 void SetUniformColor(Shader shader, char *name, Vector4 value) {
@@ -182,6 +202,10 @@ void SetUniformColor(Shader shader, char *name, Vector4 value) {
     if (loc != -1) {
         // glUniform4f(loc, value.X, value.Y, value.Z, value.w);
         glUniform4fv(loc, 1, (const float *)(&value));
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform color: %s\n", name);
     }
 }
 
@@ -529,24 +553,48 @@ void PrintMatrix(Matrix mat) {
     printf("\n");
 }
 
+void DrawMesh(Mesh mesh, Camera camera, Vector3 position, Vector4 color) {
+    glUseProgram(defaultShader.id);
+
+    SetUniformColor(defaultShader, "tint", color);
+
+    Matrix projection = GetProjection(&camera);
+    Matrix view = GetView(&camera);
+
+    Matrix mvp = projection * view * Translate(position);
+
+    uint32_t mvpLoc = glGetUniformLocation(defaultShader.id, "MVP");
+    if(mvpLoc != -1)
+        glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
+
+    glBindVertexArray(mesh.VAO);
+    glDrawElements(GL_TRIANGLES, mesh.trianglesCount, GL_UNSIGNED_INT, 0);
+}
+
 void Draw(Camera camera, Mesh mesh, PhongMaterial material, Matrix model)
 {
-    glUseProgram(material.shader.id);
+    Shader shader;
+    if(material.shader.isValid == false) {
+        shader = errorShader;
+    }
+    else {
+        shader = material.shader;
+    }
+    
+    glUseProgram(shader.id);
 
     Matrix projection = GetProjection(&camera);
     Matrix view = GetView(&camera);
 
     Matrix mvp = projection * view * model;
 
-    uint32_t mvpLoc = glGetUniformLocation(material.shader.id, "MVP");
+    uint32_t mvpLoc = glGetUniformLocation(shader.id, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
 
-    // PrintMatrix(view);
-
-    SetUniformColor(material.shader, "material.albedo", material.albedo);
-    SetUniformColor(material.shader, "material.diffuse", material.diffuse);
-    SetUniformColor(material.shader, "material.specular", material.specular);
+    SetUniformColor(shader, "material.albedo", material.albedo);
+    SetUniformColor(shader, "material.diffuse", material.diffuse);
+    SetUniformColor(shader, "material.specular", material.specular);
 
     glBindVertexArray(mesh.VAO);
     glDrawElements(GL_TRIANGLES, mesh.trianglesCount, GL_UNSIGNED_INT, 0);

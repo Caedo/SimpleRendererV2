@@ -35,11 +35,7 @@ Matrix GetView(Camera *cam)
     float yaw = cam->rotation.Y;
     float pitch = cam->rotation.X;
 
-    Vector3 forward = { 0 };
-    forward.X = cosf(yaw) * cosf(pitch);
-    forward.Y = sinf(pitch);
-    forward.Z = sinf(yaw) * cosf(pitch);
-
+    Vector3 forward = GetCameraForward(cam);
     Vector3 target = cam->position + NormalizeVec3(forward);
 
     return LookAt(cam->position, target, cam->worldUp);
@@ -75,7 +71,6 @@ Vector3 GetCameraForward(Camera* cam) {
     float yaw = cam->rotation.Y;
     float pitch = cam->rotation.X;
 
-    // @TODO @Copypasta: GetView
     Vector3 forward = { 0 };
     forward.X = cosf(yaw) * cosf(pitch);
     forward.Y = sinf(pitch);
@@ -88,11 +83,6 @@ Vector3 GetCameraRight(Camera* cam) {
     float yaw = cam->rotation.Y;
     float pitch = cam->rotation.X;
 
-    // @TODO @Copypasta: GetView
-    Vector3 forward = { 0 };
-    forward.X = cosf(yaw) * cosf(pitch);
-    forward.Y = sinf(pitch);
-    forward.Z = sinf(yaw) * cosf(pitch);
-
+    Vector3 forward = GetCameraForward(cam);
     return NormalizeVec3(Cross(cam->worldUp, forward));
 }

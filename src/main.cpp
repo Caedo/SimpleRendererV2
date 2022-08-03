@@ -111,6 +111,7 @@ void FrameEnd(GLFWwindow* window) {
 int main()
 {
     GLFWwindow* window = CreateGLFWWindow(800, 600, "Simple Renderer");
+    InitializeRenderer();
 
 
     glfwSetMouseButtonCallback(window, MouseButtonCallback);
@@ -123,8 +124,6 @@ int main()
     glFrontFace(GL_CCW);
 
     Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag");
-    // @TODO: better handling shaders errors
-    assert(shader.isValid);
 
     Mesh cube = CreateCubeMesh();
 
@@ -132,7 +131,6 @@ int main()
     material1.shader = shader;
 
     material1.albedo = {0.9f, 0.2f, 0.2f};
-
 
     camera = CreatePerspective(60.0f, 0.01f, 1000, 800, 600);
     // camera = CreateOrtographic(3, 0.1f, 1000.0, 800, 600);
@@ -182,9 +180,11 @@ int main()
         Vector3 inputVector = NormalizeVec3(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
         camera.position = camera.position + inputVector * time.delta * 5;
 
+        // DrawMesh(cube, camera, {0, 0, 0}, {1, 0, 0});
+        // DrawMesh(cube, camera, {0, 2, 0}, {0, 1, 0});
+        // DrawMesh(cube, camera, {0, 4, 0}, {0, 0, 1});
+
         Draw(camera, cube, material1, cube1Transform);
-        Draw(camera, cube, material1, cube2Transform);
-        Draw(camera, cube, material1, cube3Transform);
 
         previousMousePos = currentMousePos;
 

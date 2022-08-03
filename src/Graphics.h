@@ -56,10 +56,50 @@ struct DirectionalLight
 };
 
 //=========================================
+// Default shaders
+//=========================================
+
+const char* DefaultVertexShader = 
+"#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec3 aNorm;\n"
+"layout (location = 3) in vec4 aColor;\n"
+"out vec3 pos;\n"
+"out vec3 normal;\n"
+"out vec4 color;\n"
+"uniform mat4 MVP;\n"
+"void main() {\n"
+"    pos = aPos;\n"
+"    normal = aNorm;\n"
+"    color = aColor;\n"
+"\n"
+"    gl_Position = MVP * vec4(aPos, 1.0);\n"
+"}";
+
+const char* DefaultFragmentShader =
+"#version 330 core\n"
+"uniform vec4 tint;\n"
+"in vec3 pos;\n"
+"in vec3 normal;\n"
+"in vec4 vertexColor;\n"
+"out vec4 FragColor;\n"
+"void main() {\n"
+"    FragColor = tint;\n"
+"}";
+
+const char* ErrorFragmentShader =
+"#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main() {\n"
+"    FragColor = vec4(1, 0, 1, 1);\n"
+"}";
+
+//=========================================
 // Initialization
 //=========================================
 
 GLFWwindow* CreateGLFWWindow(int width, int height, char* tittle);
+void InitalizeRenderer();
 
 //=========================================
 // Shaders
