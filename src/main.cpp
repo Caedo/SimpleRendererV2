@@ -7,13 +7,15 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#define SRMATH_IMPLEMETATION
 #define DIR_LIGHTS_MAX 2
 
-#define RAYMATH_STANDALONE
-#define RAYMATH_IMPLEMENTATION
-#include "raymath.h"
-#undef RAYMATH_IMPLEMENTATION
+#define HMM_PREFIX(name) name
+#include "HandmadeMath.h"
+typedef hmm_vec2 Vector2;
+typedef hmm_vec3 Vector3;
+typedef hmm_vec4 Vector4;
+
+typedef hmm_mat4 Matrix;
 
 #include "Camera.h"
 
@@ -22,8 +24,6 @@
 #include "Camera.cpp"
 #include "Graphics.cpp"
 #include "glad.c"
-
-#include <windows.h>
 
 Camera camera;
 bool mouseDown = false;
@@ -126,35 +126,28 @@ int main()
     // @TODO: better handling shaders errors
     assert(shader.isValid);
 
-    Mesh sphere = CreateUVSphereMesh();
     Mesh cube = CreateCubeMesh();
-    Mesh plane = CreatePlaneMesh();
 
     PhongMaterial material1 = {};
-    PhongMaterial material2 = {};
     material1.shader = shader;
-    material2.shader = shader;
 
     material1.albedo = {0.9f, 0.2f, 0.2f};
-    material2.albedo.z = 1.f;
 
 
     camera = CreatePerspective(60.0f, 0.01f, 1000, 800, 600);
     // camera = CreateOrtographic(3, 0.1f, 1000.0, 800, 600);
-    camera.position.z = 4;
-    camera.rotation.y = (float) -PI / 2;
+    camera.position.X = -10;
 
     DirectionalLight light;
-    light.direction = Vector3Normalize({-1.f, -0.5f, 0});
+    light.direction = NormalizeVec3({-1.f, -0.5f, 0});
     light.color     = {0.7f, 1.f, 1.f};
 
     SetUniformVec3(shader, "dirLight.direction", light.direction);
     SetUniformVec3(shader, "dirLight.color", light.color);
 
-    Matrix sphereTransform = MatrixIdentity();
-    Matrix cubeTransform   = MatrixTranslate(-2.f, 0, 0);
-    Matrix planeTransform  = MatrixTranslate(0, -1, 0);
-
+    Matrix cube1Transform = Scale({1, 0.1f, 0.1f}) * Translate({0.45f, 0, 0});
+    Matrix cube2Transform = Scale({0.1f, 1, 0.1f}) * Translate({0, 0.45f, 0});
+    Matrix cube3Transform = Scale({0.1f, 0.1f, 1}) * Translate({0, 0, 0.45f});
 
     while (!glfwWindowShouldClose(window))
     {
@@ -170,13 +163,13 @@ int main()
         double currPosY;
         glfwGetCursorPos(window, &currPosX, &currPosY);
 
-        currentMousePos.x = (float)currPosX / 800;
-        currentMousePos.y = (float)currPosY / 600;
+        currentMousePos.X = (float)currPosX / 800;
+        currentMousePos.Y = (float)currPosY / 600;
         if (mouseDown)
         {
             Vector2 delta = currentMousePos - previousMousePos;
-            camera.rotation.y += delta.x;
-            camera.rotation.x += delta.y;
+            camera.rotation.Y += delta.X;
+            camera.rotation.X += delta.Y;
         }
 
         int verticalAxis = inputState.W_Pressed ? 1  :
@@ -186,12 +179,12 @@ int main()
                              inputState.D_Pressed ? -1 :
                              0;
 
-        Vector3 inputVector = Vector3Normalize(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
+        Vector3 inputVector = NormalizeVec3(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
         camera.position = camera.position + inputVector * time.delta * 5;
 
-        Draw(camera, sphere, material1, sphereTransform);
-        Draw(camera, cube, material1, cubeTransform);
-        Draw(camera, plane, material2, planeTransform);
+        Draw(camera, cube, material1, cube1Transform);
+        Draw(camera, cube, material1, cube2Transform);
+        Draw(camera, cube, material1, cube3Transform);
 
         previousMousePos = currentMousePos;
 

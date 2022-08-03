@@ -3,8 +3,6 @@
 
 #include "ctype.h"
 
-// #include "SRMath.h"
-#include "raymath.h"
 #include "Camera.h"
 
 struct GLFWwindow;

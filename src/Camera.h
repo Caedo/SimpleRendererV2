@@ -1,10 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-// #include "SRMath.h"
-#include "raymath.h"
-
-enum CameraType
+enum class CameraType
 {
     Perspective,
     Orthographic,

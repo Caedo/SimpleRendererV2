@@ -164,7 +164,7 @@ void SetUniformFloat(Shader shader, char *name, float value) {
 void SetUniformVec2(Shader shader, char *name, Vector2 value) {
     glUseProgram(shader.id);
     int loc = glGetUniformLocation(shader.id, name); {
-        glUniform2f(loc, value.x, value.y);
+        glUniform2f(loc, value.X, value.Y);
     }
 }
 
@@ -172,7 +172,7 @@ void SetUniformVec3(Shader shader, char *name, Vector3 value){
     glUseProgram(shader.id);
     int loc = glGetUniformLocation(shader.id, name);
     if (loc != -1) {
-        glUniform3f(loc, value.x, value.y, value.z);
+        glUniform3f(loc, value.X, value.Y, value.Z);
     }
 }
 
@@ -180,7 +180,7 @@ void SetUniformColor(Shader shader, char *name, Vector4 value) {
     glUseProgram(shader.id);
     int loc = glGetUniformLocation(shader.id, name);
     if (loc != -1) {
-        // glUniform4f(loc, value.x, value.y, value.z, value.w);
+        // glUniform4f(loc, value.X, value.Y, value.Z, value.w);
         glUniform4fv(loc, 1, (const float *)(&value));
     }
 }
@@ -431,12 +431,12 @@ Mesh CreateUVSphereMesh()
     int index = 0;
     mesh.vertices[index++] = {0, 1, 0};
     for(int i = 0; i < meshSize - 1; i++) {
-        double p = PI * (double) (i + 1) / meshSize;
+        double p = HMM_PI * (double) (i + 1) / meshSize;
         double pSin = sin(p);
         double pCos = cos(p);
 
         for(int j = 0; j < meshSize; j++) {
-            double a = 2.0 * PI * (double) j / meshSize;
+            double a = 2.0 * HMM_PI * (double) j / meshSize;
             double aSin = sin(a);
             double aCos = cos(a);
 
@@ -506,21 +506,28 @@ void CalculateNormals(Mesh *mesh)
         Vector3 ab = a - b;
         Vector3 ac = a - c;
 
-        Vector3 normal = Vector3CrossProduct(ab, ac);
+        Vector3 normal = Cross(ab, ac);
 
-        mesh->normals[indexA] = Vector3Add(mesh->normals[indexA], normal);
-        mesh->normals[indexB] = Vector3Add(mesh->normals[indexB], normal);
-        mesh->normals[indexC] = Vector3Add(mesh->normals[indexC], normal);
+        mesh->normals[indexA] = mesh->normals[indexA] + normal;
+        mesh->normals[indexB] = mesh->normals[indexB] + normal;
+        mesh->normals[indexC] = mesh->normals[indexC] + normal;
     }
 
     for (size_t i = 0; i < mesh->vertsCount; i++) {
-        mesh->normals[i] = Vector3Normalize(mesh->normals[i]);
+        mesh->normals[i] = NormalizeVec3(mesh->normals[i]);
     }
 }
 
 //========================================
 // Models
 //========================================
+
+void PrintMatrix(Matrix mat) {
+    for(int i = 0; i < 4; i++) {
+        printf("{%f, %f, %f, %f}\n", mat[i][0], mat[i][1], mat[i][2], mat[i][3]);
+    }
+    printf("\n");
+}
 
 void Draw(Camera camera, Mesh mesh, PhongMaterial material, Matrix model)
 {
@@ -529,11 +536,13 @@ void Draw(Camera camera, Mesh mesh, PhongMaterial material, Matrix model)
     Matrix projection = GetProjection(&camera);
     Matrix view = GetView(&camera);
 
-    Matrix mvp = model * view * projection;
+    Matrix mvp = projection * view * model;
 
     uint32_t mvpLoc = glGetUniformLocation(material.shader.id, "MVP");
     if(mvpLoc != -1)
-        glUniformMatrix4fv(mvpLoc, 1, true, (const float *)(&mvp));
+        glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
+
+    // PrintMatrix(view);
 
     SetUniformColor(material.shader, "material.albedo", material.albedo);
     SetUniformColor(material.shader, "material.diffuse", material.diffuse);
@@ -542,3 +551,4 @@ void Draw(Camera camera, Mesh mesh, PhongMaterial material, Matrix model)
     glBindVertexArray(mesh.VAO);
     glDrawElements(GL_TRIANGLES, mesh.trianglesCount, GL_UNSIGNED_INT, 0);
 }
+
