@@ -1,121 +1,19 @@
 #include <stdio.h>
 #include <assert.h>
 
-#define GLFW_DLL
-#define GLFW_INCLUDE_NONE
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
-#define DIR_LIGHTS_MAX 2
-
-#define HMM_PREFIX(name) name
-#include "HandmadeMath.h"
-typedef hmm_vec2 Vector2;
-typedef hmm_vec3 Vector3;
-typedef hmm_vec4 Vector4;
-
-typedef hmm_mat4 Matrix;
+#include "Core.h"
 
 #include "Camera.h"
-
 #include "Graphics.h"
-
-#include "Camera.cpp"
-#include "Graphics.cpp"
-#include "glad.c"
 
 Camera camera;
 bool mouseDown = false;
 Vector2 previousMousePos;
 Vector2 currentMousePos;
 
-struct InputState {
-    bool W_Pressed;
-    bool S_Pressed;
-    bool A_Pressed;
-    bool D_Pressed;
-};
-
-InputState inputState;
-
-struct Time {
-    double sinceStart;
-    float delta;
-
-    double previousFrameTime;
-};
-
-Time time;
-
-void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
-{
-    if (button == GLFW_MOUSE_BUTTON_LEFT)
-    {
-        if (action == GLFW_PRESS)
-        {
-            mouseDown = true;
-        }
-        else if (action == GLFW_RELEASE)
-        {
-            mouseDown = false;
-        }
-    }
-}
-
-void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_W)
-    {
-        inputState.W_Pressed = action == GLFW_PRESS ? true :
-                               action == GLFW_RELEASE ? false :
-                               inputState.W_Pressed;
-    }
-
-    if (key == GLFW_KEY_S)
-    {
-        inputState.S_Pressed = action == GLFW_PRESS ? true :
-                               action == GLFW_RELEASE ? false :
-                               inputState.S_Pressed;
-    }
-
-    if (key == GLFW_KEY_A)
-    {
-        inputState.A_Pressed = action == GLFW_PRESS ? true :
-                               action == GLFW_RELEASE ? false :
-                               inputState.A_Pressed;
-    }
-
-    if (key == GLFW_KEY_D)
-    {
-        inputState.D_Pressed = action == GLFW_PRESS ? true :
-                               action == GLFW_RELEASE ? false :
-                               inputState.D_Pressed;
-    }
-}
-
-void FrameStart(GLFWwindow* window) {
-    time.sinceStart        = glfwGetTime();
-    time.delta             = (float)(time.sinceStart - time.previousFrameTime);
-    time.previousFrameTime = time.sinceStart;
-
-    glClearColor(0.6f, 0.6f, 0.6f, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void FrameEnd(GLFWwindow* window) {
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-}
-
 int main()
 {
-    GLFWwindow* window = CreateGLFWWindow(800, 600, "Simple Renderer");
-    InitializeRenderer();
-
-
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);
-    glfwSetKeyCallback(window, KeyCallback);
+    SRWindow window = InitializeWindow("Window");
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -136,49 +34,38 @@ int main()
     // camera = CreateOrtographic(3, 0.1f, 1000.0, 800, 600);
     camera.position.X = -10;
 
-    DirectionalLight light;
-    light.direction = NormalizeVec3({-1.f, -0.5f, 0});
-    light.color     = {0.7f, 1.f, 1.f};
-
-    SetUniformVec3(shader, "dirLight.direction", light.direction);
-    SetUniformVec3(shader, "dirLight.color", light.color);
-
     Matrix cube1Transform = Scale({1, 0.1f, 0.1f}) * Translate({0.45f, 0, 0});
     Matrix cube2Transform = Scale({0.1f, 1, 0.1f}) * Translate({0, 0.45f, 0});
     Matrix cube3Transform = Scale({0.1f, 0.1f, 1}) * Translate({0, 0, 0.45f});
 
-    while (!glfwWindowShouldClose(window))
+    while (ShouldClose(&window) == false)
     {
-        FrameStart(window);
+        FrameStart(&window);
 
-        int escapeStatus = glfwGetKey(window, GLFW_KEY_ESCAPE);
-        if (escapeStatus == GLFW_PRESS)
-        {
-            glfwSetWindowShouldClose(window, true);
+        static bool mousePressed = false;
+        int mouseBtn = glfwGetMouseButton(window.glfwWin, GLFW_MOUSE_BUTTON_1);
+
+        if(mousePressed == false && mouseBtn == GLFW_PRESS) {
+            mousePressed = true;
+        }
+        if(mousePressed == true && mouseBtn == GLFW_RELEASE) {
+            mousePressed = false;
         }
 
-        double currPosX;
-        double currPosY;
-        glfwGetCursorPos(window, &currPosX, &currPosY);
-
-        currentMousePos.X = (float)currPosX / 800;
-        currentMousePos.Y = (float)currPosY / 600;
-        if (mouseDown)
-        {
-            Vector2 delta = currentMousePos - previousMousePos;
-            camera.rotation.Y += delta.X;
-            camera.rotation.X += delta.Y;
+        if(mousePressed) {
+            camera.rotation.Y += window.mouseDelta.X;
+            camera.rotation.Z += window.mouseDelta.Y;
         }
 
-        int verticalAxis = inputState.W_Pressed ? 1  :
-                           inputState.S_Pressed ? -1 :
+        int verticalAxis = glfwGetKey(window.glfwWin, GLFW_KEY_W) ? 1  :
+                           glfwGetKey(window.glfwWin, GLFW_KEY_S) ? -1 :
                            0;
-        int horizontalAxis = inputState.A_Pressed ? 1  :
-                             inputState.D_Pressed ? -1 :
+        int horizontalAxis = glfwGetKey(window.glfwWin, GLFW_KEY_A) ? 1  :
+                             glfwGetKey(window.glfwWin, GLFW_KEY_D) ? -1 :
                              0;
 
         Vector3 inputVector = NormalizeVec3(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
-        camera.position = camera.position + inputVector * time.delta * 5;
+        camera.position = camera.position + inputVector * window.timeDelta * 5;
 
         // DrawMesh(cube, camera, {0, 0, 0}, {1, 0, 0});
         // DrawMesh(cube, camera, {0, 2, 0}, {0, 1, 0});
@@ -188,7 +75,7 @@ int main()
 
         previousMousePos = currentMousePos;
 
-        FrameEnd(window);
+        FrameEnd(&window);
     }
 
     glfwTerminate();

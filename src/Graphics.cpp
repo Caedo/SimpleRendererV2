@@ -1,10 +1,9 @@
 #include "Graphics.h"
 
-// #include <GLFW/glfw3.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <assert.h>
 
 Shader defaultShader;
 Shader errorShader;
@@ -67,7 +66,7 @@ Shader LoadShaderSource(const char *vertexShaderCode, const char *fragmentShader
     if (!success)
     {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s", infoLog);
+        fprintf(stderr, "[Error] Vertex Shader compilation failed: \n%s\n", infoLog);
 
         return ret;
     }
@@ -79,7 +78,7 @@ Shader LoadShaderSource(const char *vertexShaderCode, const char *fragmentShader
     if (!success)
     {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s", infoLog);
+        fprintf(stderr, "[Error] Fragment shader compilation failed: \n%s\n", infoLog);
 
         return ret;
     }
@@ -111,8 +110,9 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     char *vertexSource = NULL;
     char *fragmentSource = NULL;
 
-    FILE *vertexFile = fopen(vertexPath, "rb");
-    if (vertexFile)
+    FILE *vertexFile;
+    errno_t err = fopen_s(&vertexFile, vertexPath, "rb");
+    if(err == 0)
     {
         fseek(vertexFile, 0, SEEK_END);
         long length = ftell(vertexFile);
@@ -131,8 +131,9 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
         return {0};
     }
 
-    FILE *fragmentFile = fopen(fragmentPath, "rb");
-    if (fragmentFile)
+    FILE *fragmentFile;
+    err = fopen_s(&fragmentFile, fragmentPath, "rb");
+    if(err == 0)
     {
         fseek(fragmentFile, 0, SEEK_END);
         long length = ftell(fragmentFile);
