@@ -4,6 +4,7 @@
 #include "ctype.h"
 
 #include "Camera.h"
+#include "Array.h"
 
 struct GLFWwindow;
 
@@ -22,14 +23,11 @@ struct Shader
 
 struct Mesh
 {
-    int vertsCount;
-    int trianglesCount;
-
-    Vector3* vertices;
-    Vector3* normals;
-    Vector3* colors;
-    Vector2* uv;
-    uint32_t* triangles;
+    Slice<Vector3> vertices;
+    Slice<Vector3> normals;
+    Slice<Vector3> colors;
+    Slice<Vector2> uv;
+    Slice<int32_t> triangles;
 
     uint32_t VAO;
     uint32_t EBO;
@@ -66,12 +64,12 @@ const char* DefaultVertexShader =
 "layout (location = 3) in vec4 aColor;\n"
 "out vec3 pos;\n"
 "out vec3 normal;\n"
-"out vec4 color;\n"
+"out vec4 vertexColor;\n"
 "uniform mat4 MVP;\n"
 "void main() {\n"
 "    pos = aPos;\n"
 "    normal = aNorm;\n"
-"    color = aColor;\n"
+"    vertexColor = aColor;\n"
 "\n"
 "    gl_Position = MVP * vec4(aPos, 1.0);\n"
 "}";
@@ -84,7 +82,7 @@ const char* DefaultFragmentShader =
 "in vec4 vertexColor;\n"
 "out vec4 FragColor;\n"
 "void main() {\n"
-"    FragColor = tint;\n"
+"    FragColor = vertexColor;\n"
 "}";
 
 const char* ErrorFragmentShader =

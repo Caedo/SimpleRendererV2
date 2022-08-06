@@ -222,39 +222,39 @@ void ApplyMesh(Mesh *mesh)
 
     glBindVertexArray(mesh->VAO);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->positionsVBO);
-    glBufferData(GL_ARRAY_BUFFER, mesh->vertsCount * sizeof(Vector3), mesh->vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mesh->vertices.length * sizeof(Vector3), mesh->vertices.data, GL_STATIC_DRAW);
 
     glVertexAttribPointer(VertexPositionIndex, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(VertexPositionIndex);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->trianglesCount * sizeof(int), mesh->triangles, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->triangles.length * sizeof(int), mesh->triangles.data, GL_STATIC_DRAW);
 
-    if (mesh->normals != NULL)
+    if (mesh->normals.length != 0)
     {
         glGenBuffers(1, &mesh->normalsVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->normalsVBO);
-        glBufferData(GL_ARRAY_BUFFER, mesh->vertsCount * sizeof(Vector3), mesh->normals, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->normals.length * sizeof(Vector3), mesh->normals.data, GL_STATIC_DRAW);
 
         glVertexAttribPointer(VertexNormalIndex, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(VertexNormalIndex);
     }
 
-    if (mesh->uv != NULL)
+    if (mesh->uv.length != 0)
     {
         glGenBuffers(1, &mesh->uvVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->uvVBO);
-        glBufferData(GL_ARRAY_BUFFER, mesh->vertsCount * sizeof(Vector2), mesh->uv, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->uv.length * sizeof(Vector2), mesh->uv.data, GL_STATIC_DRAW);
 
         glVertexAttribPointer(VertexUVIndex, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(VertexUVIndex);
     }
 
-    if (mesh->colors != NULL)
+    if (mesh->colors.length != 0)
     {
         glGenBuffers(1, &mesh->colorsVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->colorsVBO);
-        glBufferData(GL_ARRAY_BUFFER, mesh->vertsCount * sizeof(Vector3), mesh->colors, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->colors.length * sizeof(Vector3), mesh->colors.data, GL_STATIC_DRAW);
 
         glVertexAttribPointer(VertexColorIndex, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(VertexColorIndex);
@@ -264,14 +264,8 @@ void ApplyMesh(Mesh *mesh)
     glBindVertexArray(0);
 }
 
-void FreeMesh(Mesh* mesh) {
+void DeleteMesh(Mesh* mesh) {
     assert(mesh);
-
-    if(mesh->vertices)  free(mesh->vertices);
-    if(mesh->triangles) free(mesh->triangles);
-    if(mesh->normals)   free(mesh->normals);
-    if(mesh->uv)        free(mesh->uv);
-    if(mesh->colors)    free(mesh->colors);
 
     glDeleteVertexArrays(1, &mesh->VAO);
     glDeleteBuffers(1, &mesh->EBO);
@@ -284,13 +278,13 @@ void FreeMesh(Mesh* mesh) {
 Mesh CreateQuadMesh()
 {
     Mesh mesh = {};
-    mesh.vertices = (Vector3*) malloc(sizeof(Vector3) * 4);
+    mesh.vertices = AllocateSlice<Vector3>(4);
     mesh.vertices[0] = {0.5f, 0.5f, 0.0f},   // top right
     mesh.vertices[1] = {0.5f, -0.5f, 0.0f},   // top right
     mesh.vertices[2] = {-0.5f, -0.5f, 0.0f},   // top right
     mesh.vertices[3] = {-0.5f, 0.5f, 0.0f},   // top right
 
-    mesh.triangles = (unsigned int*) malloc(sizeof(unsigned int) * 6);
+    mesh.triangles = AllocateSlice<int>(6);
     mesh.triangles[0] = 0;
     mesh.triangles[1] = 3;
     mesh.triangles[2] = 1;
@@ -299,14 +293,11 @@ Mesh CreateQuadMesh()
     mesh.triangles[4] = 3;
     mesh.triangles[5] = 2;
 
-    mesh.normals = (Vector3*) malloc(sizeof(Vector3) * 4);
+    mesh.normals = AllocateSlice<Vector3>(4);
     mesh.normals[0] = {0, 0, 1};
     mesh.normals[1] = {0, 0, 1};
     mesh.normals[2] = {0, 0, 1};
     mesh.normals[3] = {0, 0, 1};
-
-    mesh.vertsCount = 4;
-    mesh.trianglesCount = 6;
 
     ApplyMesh(&mesh);
 
@@ -316,12 +307,10 @@ Mesh CreateQuadMesh()
 Mesh CreateCubeMesh()
 {
     Mesh mesh = {};
-    mesh.vertsCount = 24;
-    mesh.trianglesCount = 36;
 
-    mesh.vertices  = (Vector3*) malloc(mesh.vertsCount * sizeof(Vector3));
-    mesh.normals   = (Vector3*) malloc(mesh.vertsCount * sizeof(Vector3));
-    mesh.triangles = (uint32_t*) malloc(mesh.trianglesCount * sizeof(uint32_t));
+    mesh.vertices  = AllocateSlice<Vector3>(24);
+    mesh.normals   = AllocateSlice<Vector3>(24);
+    mesh.triangles = AllocateSlice<int>(36);
 
     // front
     mesh.vertices[0] = {0.5f, 0.5f, 0.5f},   // top right 0
@@ -403,12 +392,12 @@ Mesh CreatePlaneMesh() {
 
     const int meshSize = 11;
 
-    mesh.vertsCount     = meshSize * meshSize;
-    mesh.trianglesCount = (meshSize - 1) * (meshSize - 1) * 6;
+    int vertsCount     = meshSize * meshSize;
+    int trianglesCount = (meshSize - 1) * (meshSize - 1) * 6;
 
-    mesh.vertices  = (Vector3*) malloc(mesh.vertsCount * sizeof(Vector3));
-    mesh.normals   = (Vector3*) malloc(mesh.vertsCount * sizeof(Vector3));
-    mesh.triangles = (uint32_t*) malloc(mesh.trianglesCount * sizeof(uint32_t));
+    mesh.vertices  = AllocateSlice<Vector3>(vertsCount);
+    mesh.normals   = AllocateSlice<Vector3>(vertsCount);
+    mesh.triangles = AllocateSlice<int>(trianglesCount);
 
     float offset = meshSize / 2.0f - 0.5f;
 
@@ -446,12 +435,12 @@ Mesh CreateUVSphereMesh()
 
     const int meshSize = 16;
 
-    mesh.vertsCount     = (meshSize - 1) * meshSize + 2;
-    mesh.trianglesCount = (meshSize - 1) * (meshSize - 1) * 6 + 2 * ((meshSize - 1) * 3);
+    int vertsCount     = (meshSize - 1) * meshSize + 2;
+    int trianglesCount = (meshSize - 1) * (meshSize - 1) * 6 + 2 * ((meshSize - 1) * 3);
 
-    mesh.vertices  = (Vector3*) calloc(mesh.vertsCount, sizeof(Vector3));
-    mesh.normals   = (Vector3*) calloc(mesh.vertsCount, sizeof(Vector3));
-    mesh.triangles = (uint32_t*) calloc(mesh.trianglesCount, sizeof(uint32_t));
+    mesh.vertices  = AllocateSlice<Vector3>(vertsCount);
+    mesh.normals   = AllocateSlice<Vector3>(vertsCount);
+    mesh.triangles = AllocateSlice<int>(trianglesCount);
 
     int index = 0;
     mesh.vertices[index++] = {0, 1, 0};
@@ -497,9 +486,9 @@ Mesh CreateUVSphereMesh()
     }
 
     for(int i = 0; i < meshSize; i++) {
-        mesh.triangles[index++] = mesh.vertsCount - 1;
-        mesh.triangles[index++] = (i == meshSize - 1) ? mesh.vertsCount - 2 : mesh.vertsCount - 3 - i;
-        mesh.triangles[index++] = mesh.vertsCount - 2 - i;
+        mesh.triangles[index++] = vertsCount - 1;
+        mesh.triangles[index++] = (i == meshSize - 1) ? vertsCount - 2 : vertsCount - 3 - i;
+        mesh.triangles[index++] = vertsCount - 2 - i;
     }
 
     CalculateNormals(&mesh);
@@ -509,16 +498,15 @@ Mesh CreateUVSphereMesh()
 }
 
 
-void CalculateNormals(Mesh *mesh)
-{
-    assert(mesh && mesh->vertices && mesh->triangles && mesh->normals);
+void CalculateNormals(Mesh *mesh) {
+    assert(mesh && mesh->vertices.data && mesh->triangles.data && mesh->normals.data);
 
-    Vector3 *verts = mesh->vertices;
-    uint32_t *tris = mesh->triangles;
+    Slice<Vector3> verts = mesh->vertices;
+    Slice<int32_t> tris = mesh->triangles;
 
-    memset(mesh->normals, 0, mesh->vertsCount * sizeof(Vector3));
+    memset(mesh->normals.data, 0, mesh->normals.length * sizeof(Vector3));
 
-    for (size_t i = 0; i < mesh->trianglesCount; i += 3)
+    for (size_t i = 0; i < mesh->triangles.length; i += 3)
     {
         int indexA = tris[i];
         int indexB = tris[i + 1];
@@ -538,7 +526,7 @@ void CalculateNormals(Mesh *mesh)
         mesh->normals[indexC] = mesh->normals[indexC] + normal;
     }
 
-    for (size_t i = 0; i < mesh->vertsCount; i++) {
+    for (size_t i = 0; i < mesh->vertices.length; i++) {
         mesh->normals[i] = NormalizeVec3(mesh->normals[i]);
     }
 }
@@ -552,6 +540,24 @@ void PrintMatrix(Matrix mat) {
         printf("{%f, %f, %f, %f}\n", mat[i][0], mat[i][1], mat[i][2], mat[i][3]);
     }
     printf("\n");
+}
+
+void DrawMesh(Mesh mesh) {
+    glUseProgram(defaultShader.id);
+    glBindVertexArray(mesh.VAO);
+    
+    Matrix mvp = {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    };
+
+    uint32_t mvpLoc = glGetUniformLocation(defaultShader.id, "MVP");
+    if(mvpLoc != -1)
+        glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
 
 void DrawMesh(Mesh mesh, Camera camera, Vector3 position, Vector4 color) {
@@ -569,7 +575,7 @@ void DrawMesh(Mesh mesh, Camera camera, Vector3 position, Vector4 color) {
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
 
     glBindVertexArray(mesh.VAO);
-    glDrawElements(GL_TRIANGLES, mesh.trianglesCount, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
 
 void Draw(Camera camera, Mesh mesh, PhongMaterial material, Matrix model)
@@ -598,6 +604,6 @@ void Draw(Camera camera, Mesh mesh, PhongMaterial material, Matrix model)
     SetUniformColor(shader, "material.specular", material.specular);
 
     glBindVertexArray(mesh.VAO);
-    glDrawElements(GL_TRIANGLES, mesh.trianglesCount, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
 
