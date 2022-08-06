@@ -4,8 +4,8 @@
 #define GLFW_DLL
 #define GLFW_INCLUDE_NONE
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
 
 #define HMM_PREFIX(name) name
 #include "HandmadeMath.h"
@@ -38,6 +38,9 @@ bool ShouldClose(SRWindow* window);
 
 void FrameStart(SRWindow* window);
 void FrameEnd(SRWindow* window);
+
+void FaceCulling(bool enabled);
+void DepthTest(bool enabled);
 
 // void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 // void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

@@ -6,7 +6,10 @@
 #include "Camera.h"
 #include "Graphics.h"
 
-Camera camera;
+#ifdef UNITY_BUILD
+#include "unity.cpp"
+#endif
+
 bool mouseDown = false;
 Vector2 previousMousePos;
 Vector2 currentMousePos;
@@ -15,11 +18,8 @@ int main()
 {
     SRWindow window = InitializeWindow("Window");
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+    FaceCulling(true);
+    DepthTest(true);
 
     Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag");
 
@@ -30,7 +30,7 @@ int main()
 
     material1.albedo = {0.9f, 0.2f, 0.2f};
 
-    camera = CreatePerspective(60.0f, 0.01f, 1000, 800, 600);
+    Camera camera = CreatePerspective(60.0f, 0.01f, 1000, 800, 600);
     // camera = CreateOrtographic(3, 0.1f, 1000.0, 800, 600);
     camera.position.X = -10;
 
