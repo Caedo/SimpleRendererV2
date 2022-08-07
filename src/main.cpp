@@ -25,11 +25,6 @@ int main()
 
     Mesh cube = CreateCubeMesh();
 
-    PhongMaterial material1 = {};
-    material1.shader = shader;
-
-    material1.albedo = {0.9f, 0.2f, 0.2f};
-
     Camera camera = CreatePerspective(60.0f, 0.01f, 1000, 800, 600);
     // camera = CreateOrtographic(3, 0.1f, 1000.0, 800, 600);
     camera.position.X = -10;
@@ -67,11 +62,9 @@ int main()
         Vector3 inputVector = NormalizeVec3(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
         camera.position = camera.position + inputVector * window.timeDelta * 5;
 
-        // DrawMesh(cube, camera, {0, 0, 0}, {1, 0, 0});
-        // DrawMesh(cube, camera, {0, 2, 0}, {0, 1, 0});
-        // DrawMesh(cube, camera, {0, 4, 0}, {0, 0, 1});
-
-        Draw(camera, cube, material1, cube1Transform);
+        DrawMesh(cube, camera, Translate({0, 0, 0}), shader);
+        DrawMesh(cube, camera, Translate({0, 2, 0}), shader);
+        DrawMesh(cube, camera, Translate({0, 4, 0}), shader);
 
         previousMousePos = currentMousePos;
 

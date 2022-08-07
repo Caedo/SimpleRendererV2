@@ -6,9 +6,9 @@
 template <typename T>
 struct Slice {
     T* data;
-    size_t length;
+    ptrdiff_t length;
 
-    T& operator[] (size_t index) {
+    T& operator[] (int index) {
         assert(index < length);
         return data[index];
     }

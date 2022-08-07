@@ -5,6 +5,10 @@
 #include <memory.h>
 #include <assert.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+#undef STB_IMAGE_IMPLEMENTATION
+
 Shader defaultShader;
 Shader errorShader;
 
@@ -114,6 +118,7 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     errno_t err = fopen_s(&vertexFile, vertexPath, "rb");
     if(err == 0)
     {
+        // TODO: ReadEntireFile
         fseek(vertexFile, 0, SEEK_END);
         long length = ftell(vertexFile);
         fseek(vertexFile, 0, SEEK_SET);
@@ -126,7 +131,6 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     }
     else
     {
-        // @TODO, LEAK vertexSource, fragmentSource
         printf("[ERROR] Failed to open vertex shader source file at path: %s\n", vertexPath);
         return {0};
     }
@@ -135,6 +139,8 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     err = fopen_s(&fragmentFile, fragmentPath, "rb");
     if(err == 0)
     {
+        // TODO: ReadEntireFile
+
         fseek(fragmentFile, 0, SEEK_END);
         long length = ftell(fragmentFile);
         fseek(fragmentFile, 0, SEEK_SET);
@@ -147,7 +153,7 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     }
     else
     {
-        // @TODO, LEAK vertexSource, fragmentSource
+        // @TODO, LEAK vertexSource
         printf("[ERROR] Failed to open fragment shader source file at path: %s\n", fragmentPath);
         return {0};
     }
@@ -203,6 +209,19 @@ void SetUniformColor(Shader shader, char *name, Vector4 value) {
     if (loc != -1) {
         // glUniform4f(loc, value.X, value.Y, value.Z, value.w);
         glUniform4fv(loc, 1, (const float *)(&value));
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform color: %s\n", name);
+    }
+}
+
+void SetUniformMatrix(Shader shader, char* name, Matrix value) {
+    glUseProgram(shader.id);
+    int loc = glGetUniformLocation(shader.id, name);
+    if (loc != -1) {
+        // glUniform4f(loc, value.X, value.Y, value.Z, value.w);
+        glUniformMatrix4fv(loc, 1, false, (const float *)(&value));
     }
     else {
         // @TODO: logger
@@ -506,7 +525,7 @@ void CalculateNormals(Mesh *mesh) {
 
     memset(mesh->normals.data, 0, mesh->normals.length * sizeof(Vector3));
 
-    for (size_t i = 0; i < mesh->triangles.length; i += 3)
+    for (int i = 0; i < mesh->triangles.length; i += 3)
     {
         int indexA = tris[i];
         int indexB = tris[i + 1];
@@ -526,13 +545,85 @@ void CalculateNormals(Mesh *mesh) {
         mesh->normals[indexC] = mesh->normals[indexC] + normal;
     }
 
-    for (size_t i = 0; i < mesh->vertices.length; i++) {
+    for (int i = 0; i < mesh->vertices.length; i++) {
         mesh->normals[i] = NormalizeVec3(mesh->normals[i]);
     }
 }
 
 //========================================
-// Models
+// Textures
+//========================================
+
+Texture LoadTextureAtPath(char* path) {
+    assert(path);
+
+    Texture ret = {};
+
+    FILE* file;
+    errno_t err = fopen_s(&file, path, "rb");
+    if(err != 0) {
+        return ret;
+    }
+
+    // TODO: ReadEntireFile
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char* fileData = (char *)malloc(length);
+    fread(fileData, 1, length, file);
+    fclose(file);
+
+    ret = LoadTextureFromMemory(MakeSlice(fileData, 0, length));
+    free(fileData);
+
+    return ret;
+}
+
+Texture LoadTextureFromMemory(Slice<char> memory) {
+    Texture ret = {};
+
+    unsigned char* texData = stbi_load_from_memory(
+        (const stbi_uc*) memory.data,
+        (int) memory.length,
+        &ret.width,
+        &ret.height,
+        &ret.channels,
+        0
+    );
+
+    GLenum format = 0;
+    switch(ret.channels) {
+        case 1: format = GL_RED;  break;
+        case 2: format = GL_RG;   break;
+        case 3: format = GL_RGB;  break;
+        case 4: format = GL_RGBA; break;
+        default: assert(false);
+    }
+
+    glGenTextures(1, &ret.id);
+    glBindTexture(GL_TEXTURE_2D, ret.id);
+
+    // TODO: Handle different parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, ret.width, ret.height, 0, format, GL_UNSIGNED_BYTE, texData);
+
+    stbi_image_free(texData);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    ret.isValid = true;
+
+    return ret;
+
+}
+
+
+//========================================
+// Drawing
 //========================================
 
 void PrintMatrix(Matrix mat) {
@@ -544,7 +635,6 @@ void PrintMatrix(Matrix mat) {
 
 void DrawMesh(Mesh mesh) {
     glUseProgram(defaultShader.id);
-    glBindVertexArray(mesh.VAO);
     
     Matrix mvp = {
         1, 0, 0, 0,
@@ -557,6 +647,7 @@ void DrawMesh(Mesh mesh) {
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
 
+    glBindVertexArray(mesh.VAO);
     glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
 
@@ -578,32 +669,18 @@ void DrawMesh(Mesh mesh, Camera camera, Vector3 position, Vector4 color) {
     glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
 
-void Draw(Camera camera, Mesh mesh, PhongMaterial material, Matrix model)
-{
-    Shader shader;
-    if(material.shader.isValid == false) {
-        shader = errorShader;
-    }
-    else {
-        shader = material.shader;
-    }
-    
-    glUseProgram(shader.id);
+void DrawMesh(Mesh mesh, Camera camera, Matrix transform, Shader shader) {
+    uint32_t shaderId = shader.isValid ? shader.id : errorShader.id;
+    glUseProgram(shaderId);
 
     Matrix projection = GetProjection(&camera);
     Matrix view = GetView(&camera);
+    Matrix mvp = projection * view * transform;
 
-    Matrix mvp = projection * view * model;
-
-    uint32_t mvpLoc = glGetUniformLocation(shader.id, "MVP");
+    uint32_t mvpLoc = glGetUniformLocation(defaultShader.id, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
-
-    SetUniformColor(shader, "material.albedo", material.albedo);
-    SetUniformColor(shader, "material.diffuse", material.diffuse);
-    SetUniformColor(shader, "material.specular", material.specular);
 
     glBindVertexArray(mesh.VAO);
     glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
-

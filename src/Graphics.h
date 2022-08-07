@@ -6,6 +6,8 @@
 #include "Camera.h"
 #include "Array.h"
 
+#include "stb/stb_image.h"
+
 struct GLFWwindow;
 
 enum VertexBufferIndex {
@@ -38,19 +40,23 @@ struct Mesh
     uint32_t uvVBO;
 };
 
-struct PhongMaterial
-{
-    Shader shader;
+struct Texture {
+    bool isValid;
+    uint32_t id;
 
-    Vector4 albedo;
-    Vector4 diffuse;
-    Vector4 specular;
-};
+    int width;
+    int height;
+    int channels;
 
-struct DirectionalLight 
-{
-    Vector3 direction;
-    Vector3 color;
+    // @TODO: create enums for this?
+    // @TIDO: Split?
+    int wrapType;
+
+    // @TODO: split between magnifying and minifying?
+    int filtering;
+
+    // @TODO: mipmaps
+    // @TODO: texture units
 };
 
 //=========================================
@@ -82,7 +88,7 @@ const char* DefaultFragmentShader =
 "in vec4 vertexColor;\n"
 "out vec4 FragColor;\n"
 "void main() {\n"
-"    FragColor = vertexColor;\n"
+"    FragColor = tint;\n"
 "}";
 
 const char* ErrorFragmentShader =
@@ -126,8 +132,25 @@ Mesh CreateUVSphereMesh();
 void CalculateNormals(Mesh* mesh);
 
 //========================================
-// Models
+// Textures
 //========================================
-void Draw(Camera cam, Mesh mesh, PhongMaterial material, Matrix modelMatrix);
+
+Texture LoadTextureAtPath(char* path);
+Texture LoadTextureFromMemory(Slice<char> mem);
+
+//========================================
+// Drawing
+//========================================
+void DrawMesh(Mesh mesh); // DELETE
+void DrawMesh(Mesh mesh, Camera camera, Vector3 position, Vector4 color); // RENAME
+
+// DrawMesh(mesh, material, camera, tranform) - standard function
+// DrawMeshColor(mesh, camera, transform, color) - use default shader
+// DrawMeshTexture(mesh, camera, transform, Texture) - use texture shader
+
+// Screen space functions - I need them for microui anyway
+// DrawRect(destination, color);
+// DrawImage(destination, color);
+// DrawImage(source, destination, color);
 
 #endif // GRAPHICS_H
