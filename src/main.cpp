@@ -21,7 +21,7 @@ int main()
     FaceCulling(true);
     DepthTest(true);
 
-    Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag");
+    Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag", &window.tempArena);
 
     Mesh cube = CreateCubeMesh();
 

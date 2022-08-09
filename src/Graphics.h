@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#include "ctype.h"
+#include <stdint.h>
 
 #include "Camera.h"
 #include "Array.h"
@@ -122,7 +122,7 @@ void InitalizeRenderer();
 //=========================================
 
 Shader LoadShaderSource(const char *vertexShader, const char *fragmentShader);
-Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath);
+Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath, MemoryArena* arena);
 
 void SetUniformFloat(Shader shader, char *name, float value);
 void SetUniformVec2(Shader shader, char *name, Vector2 value);
@@ -147,7 +147,7 @@ void CalculateNormals(Mesh* mesh);
 // Textures
 //========================================
 
-Texture LoadTextureAtPath(char* path);
+Texture LoadTextureAtPath(char* path, MemoryArena* arena);
 Texture LoadTextureFromMemory(Slice<char> mem);
 void BindTexture(Texture texture);
 

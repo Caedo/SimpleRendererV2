@@ -112,7 +112,7 @@ Shader LoadShaderSource(const char *vertexShaderCode, const char *fragmentShader
     return ret;
 }
 
-Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
+Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath, MemoryArena* arena)
 {
     char *vertexSource = NULL;
     char *fragmentSource = NULL;
@@ -126,7 +126,7 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
         long length = ftell(vertexFile);
         fseek(vertexFile, 0, SEEK_SET);
 
-        vertexSource = (char *)malloc(length + 1);
+        vertexSource = (char *)PushArena(arena, length + 1);
         fread(vertexSource, 1, length, vertexFile);
 
         vertexSource[length] = '\0';
@@ -148,7 +148,7 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
         long length = ftell(fragmentFile);
         fseek(fragmentFile, 0, SEEK_SET);
 
-        fragmentSource = (char *)malloc(length + 1);
+        fragmentSource = (char *)PushArena(arena, length + 1);
         fread(fragmentSource, 1, length, fragmentFile);
 
         fragmentSource[length] = '\0';
@@ -156,17 +156,11 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath)
     }
     else
     {
-        // @TODO, LEAK vertexSource
         printf("[ERROR] Failed to open fragment shader source file at path: %s\n", fragmentPath);
         return {0};
     }
 
-    Shader shader = LoadShaderSource(vertexSource, fragmentSource);
-
-    free(vertexSource);
-    free(fragmentSource);
-
-    return shader;
+    return LoadShaderSource(vertexSource, fragmentSource);
 }
 
 void SetUniformFloat(Shader shader, char *name, float value) {
@@ -557,7 +551,7 @@ void CalculateNormals(Mesh *mesh) {
 // Textures
 //========================================
 
-Texture LoadTextureAtPath(char* path) {
+Texture LoadTextureAtPath(char* path, MemoryArena* arena) {
     assert(path);
 
     Texture ret = {};
@@ -573,14 +567,11 @@ Texture LoadTextureAtPath(char* path) {
     long length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char* fileData = (char *)malloc(length);
+    char* fileData = (char *)PushArena(arena, length);
     fread(fileData, 1, length, file);
     fclose(file);
 
-    ret = LoadTextureFromMemory(MakeSlice(fileData, 0, length));
-    free(fileData);
-
-    return ret;
+    return LoadTextureFromMemory(MakeSlice(fileData, 0, length));
 }
 
 Texture LoadTextureFromMemory(Slice<char> memory) {

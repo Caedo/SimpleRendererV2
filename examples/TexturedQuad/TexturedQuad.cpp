@@ -30,7 +30,7 @@ const char* Fragment =
 int main() {
     SRWindow window = InitializeWindow("Texture");
 
-    Texture texture = LoadTextureAtPath("av.png");
+    Texture texture = LoadTextureAtPath("av.png", &window.tempArena);
     assert(texture.isValid);
 
     Shader shader = LoadShaderSource(Vertex, Fragment);

@@ -7,6 +7,8 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
+#include "Memory.h"
+
 #define HMM_PREFIX(name) name
 #include "HandmadeMath.h"
 
@@ -18,6 +20,7 @@ typedef hmm_mat4 Matrix;
 
 struct SRWindow {
     GLFWwindow* glfwWin;
+    MemoryArena tempArena;
 
     // @Note: it is size of the framebuffer.
     // If you want the window size call glfwGetWindowSize()

@@ -6,6 +6,8 @@ SRWindow InitializeWindow(char* name) {
     win.glfwWin = CreateGLFWWindow(800, 600, "Simple Renderer");
     InitializeRenderer();
 
+    win.tempArena = CreateArena();
+
     return win;
 }
 
@@ -42,6 +44,7 @@ void FrameStart(SRWindow* window) {
 }
 
 void FrameEnd(SRWindow* window) {
+    ClearArena(&window->tempArena);
     glfwSwapBuffers(window->glfwWin);
     glfwPollEvents();
 }
