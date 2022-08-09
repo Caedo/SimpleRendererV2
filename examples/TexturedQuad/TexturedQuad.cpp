@@ -60,10 +60,8 @@ int main() {
     while(ShouldClose(&window) == false) {
         FrameStart(&window);
 
-        glUseProgram(shader.id);
         glBindTexture(GL_TEXTURE_2D, texture.id);
-        glBindVertexArray(mesh.VAO);
-        glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
+        DrawMesh(mesh, Mat4d(1), shader);
 
         FrameEnd(&window);
     }

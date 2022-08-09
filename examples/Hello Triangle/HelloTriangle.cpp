@@ -24,10 +24,17 @@ int main() {
 
     ApplyMesh(&mesh);
 
+    Matrix identityMatrix = {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    };
+
     while(ShouldClose(&window) == false) {
         FrameStart(&window);
 
-        DrawMesh(mesh);
+        DrawMesh(mesh, identityMatrix, VertexColorShader);
 
         FrameEnd(&window);
     }

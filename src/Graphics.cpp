@@ -9,8 +9,9 @@
 #include "stb/stb_image.h"
 #undef STB_IMAGE_IMPLEMENTATION
 
-Shader defaultShader;
-Shader errorShader;
+Shader ErrorShader;
+Shader ColorShader;
+Shader VertexColorShader;
 
 //=========================================
 // Initialization
@@ -45,11 +46,13 @@ void InitializeRenderer() {
 
     glfwSwapInterval(1);
 
-    defaultShader = LoadShaderSource(DefaultVertexShader, DefaultFragmentShader);
-    errorShader = LoadShaderSource(DefaultVertexShader, ErrorFragmentShader);
+    ErrorShader = LoadShaderSource(DefaultVertexShaderSource, ErrorFragmentShaderSource);
+    ColorShader = LoadShaderSource(DefaultVertexShaderSource, ColorShaderSource);
+    VertexColorShader = LoadShaderSource(DefaultVertexShaderSource, VertexColorShaderSource);
 
-    assert(defaultShader.isValid);
-    assert(errorShader.isValid);
+    assert(ErrorShader.isValid);
+    assert(ColorShader.isValid);
+    assert(VertexColorShader.isValid);
 }
 
 //=========================================
@@ -633,51 +636,27 @@ void PrintMatrix(Matrix mat) {
     printf("\n");
 }
 
-void DrawMesh(Mesh mesh) {
-    glUseProgram(defaultShader.id);
-    
-    Matrix mvp = {
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    };
+void DrawMesh(Mesh mesh, Matrix transform, Shader shader) {
+    uint32_t shaderId = shader.isValid ? shader.id : ErrorShader.id;
+    glUseProgram(shaderId);
 
-    uint32_t mvpLoc = glGetUniformLocation(defaultShader.id, "MVP");
+    uint32_t mvpLoc = glGetUniformLocation(shaderId, "MVP");
     if(mvpLoc != -1)
-        glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
-
-    glBindVertexArray(mesh.VAO);
-    glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
-}
-
-void DrawMesh(Mesh mesh, Camera camera, Vector3 position, Vector4 color) {
-    glUseProgram(defaultShader.id);
-
-    SetUniformColor(defaultShader, "tint", color);
-
-    Matrix projection = GetProjection(&camera);
-    Matrix view = GetView(&camera);
-
-    Matrix mvp = projection * view * Translate(position);
-
-    uint32_t mvpLoc = glGetUniformLocation(defaultShader.id, "MVP");
-    if(mvpLoc != -1)
-        glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
+        glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&transform));
 
     glBindVertexArray(mesh.VAO);
     glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
 
 void DrawMesh(Mesh mesh, Camera camera, Matrix transform, Shader shader) {
-    uint32_t shaderId = shader.isValid ? shader.id : errorShader.id;
+    uint32_t shaderId = shader.isValid ? shader.id : ErrorShader.id;
     glUseProgram(shaderId);
 
     Matrix projection = GetProjection(&camera);
     Matrix view = GetView(&camera);
     Matrix mvp = projection * view * transform;
 
-    uint32_t mvpLoc = glGetUniformLocation(defaultShader.id, "MVP");
+    uint32_t mvpLoc = glGetUniformLocation(shader.id, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
 

@@ -63,7 +63,7 @@ struct Texture {
 // Default shaders
 //=========================================
 
-const char* DefaultVertexShader = 
+const char* DefaultVertexShaderSource = 
 "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec3 aNorm;\n"
@@ -80,23 +80,35 @@ const char* DefaultVertexShader =
 "    gl_Position = MVP * vec4(aPos, 1.0);\n"
 "}";
 
-const char* DefaultFragmentShader =
+const char* VertexColorShaderSource =
 "#version 330 core\n"
 "uniform vec4 tint;\n"
 "in vec3 pos;\n"
-"in vec3 normal;\n"
 "in vec4 vertexColor;\n"
+"out vec4 FragColor;\n"
+"void main() {\n"
+"    FragColor = vertexColor;\n"
+"}";
+
+const char* ColorShaderSource =
+"#version 330 core\n"
+"uniform vec4 tint;\n"
+"in vec3 pos;\n"
 "out vec4 FragColor;\n"
 "void main() {\n"
 "    FragColor = tint;\n"
 "}";
 
-const char* ErrorFragmentShader =
+const char* ErrorFragmentShaderSource =
 "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main() {\n"
 "    FragColor = vec4(1, 0, 1, 1);\n"
 "}";
+
+extern Shader ErrorShader;
+extern Shader ColorShader;
+extern Shader VertexColorShader;
 
 //=========================================
 // Initialization
@@ -141,8 +153,7 @@ Texture LoadTextureFromMemory(Slice<char> mem);
 //========================================
 // Drawing
 //========================================
-void DrawMesh(Mesh mesh); // DELETE
-void DrawMesh(Mesh mesh, Camera camera, Vector3 position, Vector4 color); // RENAME
+void DrawMesh(Mesh mesh, Matrix transform, Shader shader);
 
 // DrawMesh(mesh, material, camera, tranform) - standard function
 // DrawMeshColor(mesh, camera, transform, color) - use default shader

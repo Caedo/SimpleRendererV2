@@ -3,3 +3,6 @@
 *.obj
 *.exe
 *.pdb
+
+/examples/*/*.dll
+/examples/*/*.lib
