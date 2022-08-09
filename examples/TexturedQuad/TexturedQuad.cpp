@@ -60,7 +60,7 @@ int main() {
     while(ShouldClose(&window) == false) {
         FrameStart(&window);
 
-        glBindTexture(GL_TEXTURE_2D, texture.id);
+        BindTexture(texture);
         DrawMesh(mesh, Mat4d(1), shader);
 
         FrameEnd(&window);

@@ -621,9 +621,12 @@ Texture LoadTextureFromMemory(Slice<char> memory) {
     ret.isValid = true;
 
     return ret;
-
 }
 
+void BindTexture(Texture texture) {
+    // @TODO: add texture units
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+}
 
 //========================================
 // Drawing

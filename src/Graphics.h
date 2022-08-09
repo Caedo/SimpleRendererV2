@@ -149,6 +149,7 @@ void CalculateNormals(Mesh* mesh);
 
 Texture LoadTextureAtPath(char* path);
 Texture LoadTextureFromMemory(Slice<char> mem);
+void BindTexture(Texture texture);
 
 //========================================
 // Drawing
