@@ -31,6 +31,7 @@ void* PushArena(MemoryArena* arena, uint64_t size) {
 
 void ClearArena(MemoryArena* arena) {
     // @win32
+    // @TODO: Zero memory only in debug builds
     ZeroMemory(arena->baseAddres, arena->allocatedOffset);
     arena->allocatedOffset = 0;
 }
