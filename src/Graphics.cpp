@@ -180,7 +180,7 @@ void SetUniformVec2(Shader shader, char *name, Vector2 value) {
     glUseProgram(shader.id);
     int loc = glGetUniformLocation(shader.id, name);
     if(loc != -1) {
-        glUniform2f(loc, value.X, value.Y);
+        glUniform2f(loc, value.x, value.y);
     }
     else {
         // @TODO: logger
@@ -192,7 +192,7 @@ void SetUniformVec3(Shader shader, char *name, Vector3 value){
     glUseProgram(shader.id);
     int loc = glGetUniformLocation(shader.id, name);
     if (loc != -1) {
-        glUniform3f(loc, value.X, value.Y, value.Z);
+        glUniform3f(loc, value.x, value.y, value.z);
     }
     else {
         // @TODO: logger
@@ -204,7 +204,7 @@ void SetUniformColor(Shader shader, char *name, Vector4 value) {
     glUseProgram(shader.id);
     int loc = glGetUniformLocation(shader.id, name);
     if (loc != -1) {
-        // glUniform4f(loc, value.X, value.Y, value.Z, value.w);
+        // glUniform4f(loc, value.x, value.y, value.z, value.w);
         glUniform4fv(loc, 1, (const float *)(&value));
     }
     else {
@@ -217,7 +217,7 @@ void SetUniformMatrix(Shader shader, char* name, Matrix value) {
     glUseProgram(shader.id);
     int loc = glGetUniformLocation(shader.id, name);
     if (loc != -1) {
-        // glUniform4f(loc, value.X, value.Y, value.Z, value.w);
+        // glUniform4f(loc, value.x, value.y, value.z, value.w);
         glUniformMatrix4fv(loc, 1, false, (const float *)(&value));
     }
     else {
@@ -270,9 +270,9 @@ void ApplyMesh(Mesh *mesh)
     {
         glGenBuffers(1, &mesh->colorsVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->colorsVBO);
-        glBufferData(GL_ARRAY_BUFFER, mesh->colors.length * sizeof(Vector3), mesh->colors.data, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->colors.length * sizeof(Vector4), mesh->colors.data, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(VertexColorIndex, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+        glVertexAttribPointer(VertexColorIndex, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(VertexColorIndex);
     }
 
@@ -326,6 +326,7 @@ Mesh CreateCubeMesh()
 
     mesh.vertices  = AllocateSlice<Vector3>(24);
     mesh.normals   = AllocateSlice<Vector3>(24);
+    mesh.colors    = AllocateSlice<Vector4>(24);
     mesh.triangles = AllocateSlice<int>(36);
 
     // front
@@ -334,11 +335,21 @@ Mesh CreateCubeMesh()
     mesh.vertices[2] = {-0.5f, -0.5f, 0.5f}, // bottom left 2
     mesh.vertices[3] = {-0.5f, 0.5f, 0.5f},  // top left 3
 
+    mesh.colors[0] = {0, 0, 1, 1};
+    mesh.colors[1] = {0, 1, 0, 1};
+    mesh.colors[2] = {0, 1, 1, 1};
+    mesh.colors[3] = {1, 0, 0, 1};
+
     // back
     mesh.vertices[4] = {0.5f, 0.5f, -0.5f},   // top right 4
     mesh.vertices[5] = {0.5f, -0.5f, -0.5f},  // bottom right 5
     mesh.vertices[6] = {-0.5f, -0.5f, -0.5f}, // bottom left 6
     mesh.vertices[7] = {-0.5f, 0.5f, -0.5f},  // top left 7
+
+    mesh.colors[4] = {1, 0, 1, 1};
+    mesh.colors[5] = {1, 1, 0, 1};
+    mesh.colors[6] = {1, 1, 1, 1};
+    mesh.colors[7] = {0, 0, 0, 1};
 
     // left
     mesh.vertices[8] = {-0.5f, 0.5f, 0.5f},   // top front 8
@@ -346,11 +357,21 @@ Mesh CreateCubeMesh()
     mesh.vertices[10] = {-0.5f, -0.5f, -0.5f}, // bottom back 10
     mesh.vertices[11] = {-0.5f, 0.5f, -0.5f},  // top back 11
 
+    mesh.colors[8] =  {1, 0, 0, 1};
+    mesh.colors[9] =  {0, 1, 1, 1};
+    mesh.colors[10] = {1, 1, 1, 1};
+    mesh.colors[11] = {0, 0, 0, 1};
+
     // right
     mesh.vertices[12] = {0.5f, 0.5f, 0.5f},   // top front 12
     mesh.vertices[13] = {0.5f, -0.5f, 0.5f},  // bottom front 13
     mesh.vertices[14] = {0.5f, -0.5f, -0.5f}, // bottom back 14
     mesh.vertices[15] = {0.5f, 0.5f, -0.5f},  // top back 15
+
+    mesh.colors[12] = {0, 0, 1, 1};
+    mesh.colors[13] = {0, 1, 0, 1};
+    mesh.colors[14] = {1, 1, 0, 1};
+    mesh.colors[15] = {1, 0, 1, 1};
 
     // top
     mesh.vertices[16] = {-0.5f, 0.5f, 0.5f},  // left front 16
@@ -358,11 +379,21 @@ Mesh CreateCubeMesh()
     mesh.vertices[18] = {0.5f, 0.5f, -0.5f},  // right back 18
     mesh.vertices[19] = {-0.5f, 0.5f, -0.5f}, // left back 19
 
+    mesh.colors[16] = {1, 0, 0, 1};
+    mesh.colors[17] = {0, 0, 1, 1};
+    mesh.colors[18] = {1, 0, 1, 1};
+    mesh.colors[19] = {0, 0, 0, 1};
+
     // bottom
     mesh.vertices[20] = {-0.5f, -0.5f, 0.5f},  // left front 20
     mesh.vertices[21] = {0.5f, -0.5f, 0.5f},   // right front 21
     mesh.vertices[22] = {0.5f, -0.5f, -0.5f},  // right back 22
     mesh.vertices[23] = {-0.5f, -0.5f, -0.5f}, // left back 23
+
+    mesh.colors[20] = {0, 1, 1, 1};
+    mesh.colors[21] = {0, 1, 0, 1};
+    mesh.colors[22] = {1, 1, 0, 1};
+    mesh.colors[23] = {1, 1, 1, 1};
 
     // {
     //     0, 2, 1,    //
@@ -461,12 +492,12 @@ Mesh CreateUVSphereMesh()
     int index = 0;
     mesh.vertices[index++] = {0, 1, 0};
     for(int i = 0; i < meshSize - 1; i++) {
-        double p = HMM_PI * (double) (i + 1) / meshSize;
+        double p = PI * (double) (i + 1) / meshSize;
         double pSin = sin(p);
         double pCos = cos(p);
 
         for(int j = 0; j < meshSize; j++) {
-            double a = 2.0 * HMM_PI * (double) j / meshSize;
+            double a = 2.0 * PI * (double) j / meshSize;
             double aSin = sin(a);
             double aCos = cos(a);
 
@@ -535,7 +566,7 @@ void CalculateNormals(Mesh *mesh) {
         Vector3 ab = a - b;
         Vector3 ac = a - c;
 
-        Vector3 normal = Cross(ab, ac);
+        Vector3 normal = Vector3CrossProduct(ab, ac);
 
         mesh->normals[indexA] = mesh->normals[indexA] + normal;
         mesh->normals[indexB] = mesh->normals[indexB] + normal;
@@ -543,7 +574,7 @@ void CalculateNormals(Mesh *mesh) {
     }
 
     for (int i = 0; i < mesh->vertices.length; i++) {
-        mesh->normals[i] = NormalizeVec3(mesh->normals[i]);
+        mesh->normals[i] = Vector3Normalize(mesh->normals[i]);
     }
 }
 
@@ -623,12 +654,12 @@ void BindTexture(Texture texture) {
 // Drawing
 //========================================
 
-void PrintMatrix(Matrix mat) {
-    for(int i = 0; i < 4; i++) {
-        printf("{%f, %f, %f, %f}\n", mat[i][0], mat[i][1], mat[i][2], mat[i][3]);
-    }
-    printf("\n");
-}
+// void PrintMatrix(Matrix mat) {
+//     for(int i = 0; i < 4; i++) {
+//         printf("{%f, %f, %f, %f}\n", mat[i][0], mat[i][1], mat[i][2], mat[i][3]);
+//     }
+//     printf("\n");
+// }
 
 void DrawMesh(Mesh mesh, Matrix transform, Shader shader) {
     uint32_t shaderId = shader.isValid ? shader.id : ErrorShader.id;

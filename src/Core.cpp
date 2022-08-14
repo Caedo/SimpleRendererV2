@@ -31,8 +31,8 @@ void FrameStart(SRWindow* window) {
     glfwGetCursorPos(window->glfwWin, &currsorPosX, &currsorPosY);
 
     window->mousePrevPos = window->mousePos;
-    window->mousePos.X = (float) currsorPosX / window->width;
-    window->mousePos.Y = (float) currsorPosY / window->height;
+    window->mousePos.x = (float) currsorPosX / window->width;
+    window->mousePos.y = (float) currsorPosY / window->height;
 
     window->mouseDelta = window->mousePos - window->mousePrevPos;
 

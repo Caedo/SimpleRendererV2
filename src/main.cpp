@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <assert.h>
 
-#include "Core.h"
-
-#include "Camera.h"
-#include "Graphics.h"
 
 #ifdef UNITY_BUILD
 #include "unity.cpp"
@@ -25,32 +19,24 @@ int main()
 
     Mesh cube = CreateCubeMesh();
 
-    Camera camera = CreatePerspective(60.0f, 0.01f, 1000, 800, 600);
+    Camera camera = CreatePerspective(90.0f, 0.01f, 1000, 800, 600);
     // camera = CreateOrtographic(3, 0.1f, 1000.0, 800, 600);
-    camera.position.X = -10;
+    camera.position.x = -5;
 
-    Matrix cube1Transform = Scale({1, 0.1f, 0.1f}) * Translate({0.45f, 0, 0});
-    Matrix cube2Transform = Scale({0.1f, 1, 0.1f}) * Translate({0, 0.45f, 0});
-    Matrix cube3Transform = Scale({0.1f, 0.1f, 1}) * Translate({0, 0, 0.45f});
+    Matrix cube1Transform = MatrixScale(1, 0.1f, 0.1f) * MatrixTranslate(0.45f, 0, 0);
+    Matrix cube2Transform = MatrixScale(0.1f, 1, 0.1f) * MatrixTranslate(0, 0.45f, 0);
+    Matrix cube3Transform = MatrixScale(0.1f, 0.1f, 1) * MatrixTranslate(0, 0, 0.45f);
 
     while (ShouldClose(&window) == false)
     {
         FrameStart(&window);
 
-        static bool mousePressed = false;
-        int mouseBtn = glfwGetMouseButton(window.glfwWin, GLFW_MOUSE_BUTTON_1);
-
-        if(mousePressed == false && mouseBtn == GLFW_PRESS) {
-            mousePressed = true;
-        }
-        if(mousePressed == true && mouseBtn == GLFW_RELEASE) {
-            mousePressed = false;
+        if(window.leftMouseBtnPressed) {
+            camera.rotation.y += window.mouseDelta.x;
+            camera.rotation.x += window.mouseDelta.y;
         }
 
-        if(mousePressed) {
-            camera.rotation.Y += window.mouseDelta.X;
-            camera.rotation.Z += window.mouseDelta.Y;
-        }
+        // camera.rotation.y += window.timeDelta;
 
         int verticalAxis = glfwGetKey(window.glfwWin, GLFW_KEY_W) ? 1  :
                            glfwGetKey(window.glfwWin, GLFW_KEY_S) ? -1 :
@@ -59,12 +45,12 @@ int main()
                              glfwGetKey(window.glfwWin, GLFW_KEY_D) ? -1 :
                              0;
 
-        Vector3 inputVector = NormalizeVec3(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
+        Vector3 inputVector = Vector3Normalize(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
         camera.position = camera.position + inputVector * window.timeDelta * 5;
 
-        DrawMesh(cube, camera, Translate({0, 0, 0}), shader);
-        DrawMesh(cube, camera, Translate({0, 2, 0}), shader);
-        DrawMesh(cube, camera, Translate({0, 4, 0}), shader);
+        DrawMesh(cube, camera, MatrixTranslate(0, 0, 0), shader);
+        DrawMesh(cube, camera, MatrixTranslate(0, 2, 0), shader);
+        DrawMesh(cube, camera, MatrixTranslate(0, 4, 0), shader);
 
         previousMousePos = currentMousePos;
 

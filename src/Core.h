@@ -9,14 +9,6 @@
 
 #include "Memory.h"
 
-#define HMM_PREFIX(name) name
-#include "HandmadeMath.h"
-
-typedef hmm_vec2 Vector2;
-typedef hmm_vec3 Vector3;
-typedef hmm_vec4 Vector4;
-
-typedef hmm_mat4 Matrix;
 
 struct SRWindow {
     GLFWwindow* glfwWin;

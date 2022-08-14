@@ -18,7 +18,7 @@ Camera CreatePerspective(float fov, float nearPlane, float farPlane, int widthAs
 {
     Camera ret = {0};
 
-    ret.fov = fov;
+    ret.fov = fov * DEG2RAD;
     ret.farPlane = farPlane;
     ret.nearPlane = nearPlane;
     ret.aspect = (float)widthAspect / heightAspect;
@@ -32,13 +32,13 @@ Matrix GetView(Camera *cam)
 {
     // @TODO: add roll option...?
 
-    float yaw = cam->rotation.Y;
-    float pitch = cam->rotation.X;
+    float yaw = cam->rotation.y;
+    float pitch = cam->rotation.x;
 
     Vector3 forward = GetCameraForward(cam);
-    Vector3 target = cam->position + NormalizeVec3(forward);
+    Vector3 target = cam->position + Vector3Normalize(forward);
 
-    return LookAt(cam->position, target, cam->worldUp);
+    return MatrixLookAt(cam->position, target, cam->worldUp);
 }
 
 Matrix GetProjection(Camera *cam)
@@ -49,17 +49,17 @@ Matrix GetProjection(Camera *cam)
             float orthoHeight = cam->ortographicSize;
             float orthoWidth = cam->aspect * orthoHeight;
 
-            return Orthographic(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, cam->nearPlane, cam->farPlane);
+            return MatrixOrtho(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, cam->nearPlane, cam->farPlane);
         }
         break;
 
         case CameraType::Perspective: {
-            return Perspective(cam->fov, cam->aspect, cam->nearPlane, cam->farPlane);
+            return MatrixPerspective(cam->fov, cam->aspect, cam->nearPlane, cam->farPlane);
         }
         break;
     }
 
-    return Mat4d(1);
+    return MatrixIdentity();
 }
 
 Matrix GetVPMatrix(Camera *cam)
@@ -68,21 +68,21 @@ Matrix GetVPMatrix(Camera *cam)
 }
 
 Vector3 GetCameraForward(Camera* cam) {
-    float yaw = cam->rotation.Y;
-    float pitch = cam->rotation.X;
+    float yaw = cam->rotation.y;
+    float pitch = cam->rotation.x;
 
     Vector3 forward = { 0 };
-    forward.X = cosf(yaw) * cosf(pitch);
-    forward.Y = sinf(pitch);
-    forward.Z = sinf(yaw) * cosf(pitch);
+    forward.x = cosf(yaw) * cosf(pitch);
+    forward.y = sinf(pitch);
+    forward.z = sinf(yaw) * cosf(pitch);
 
     return forward;
 }
 
 Vector3 GetCameraRight(Camera* cam) {
-    float yaw = cam->rotation.Y;
-    float pitch = cam->rotation.X;
+    float yaw = cam->rotation.y;
+    float pitch = cam->rotation.x;
 
     Vector3 forward = GetCameraForward(cam);
-    return NormalizeVec3(Cross(cam->worldUp, forward));
+    return Vector3Normalize(Vector3CrossProduct(cam->worldUp, forward));
 }
