@@ -34,6 +34,9 @@ struct SRWindow {
     Vector2 mousePos;
     Vector2 mousePrevPos;
     Vector2 mouseDelta;
+
+    bool leftMouseBtnPressed;
+    bool rightMouseBtnPressed;
 };
 
 SRWindow InitializeWindow(char* name);

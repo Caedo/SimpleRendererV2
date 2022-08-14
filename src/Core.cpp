@@ -3,7 +3,11 @@
 SRWindow InitializeWindow(char* name) {
     SRWindow win = {0};
 
-    win.glfwWin = CreateGLFWWindow(800, 600, "Simple Renderer");
+    // @TODO: expose width and height to use code
+    win.width = 800;
+    win.height = 600;
+
+    win.glfwWin = CreateGLFWWindow(800, 600, name);
     InitializeRenderer();
 
     win.tempArena = CreateArena();
@@ -21,16 +25,20 @@ void FrameStart(SRWindow* window) {
     window->previousFrameTime = window->timeSinceStart;
 
     glfwGetFramebufferSize(window->glfwWin, &window->width, &window->height);
-    
+
     double currsorPosX;
     double currsorPosY;
     glfwGetCursorPos(window->glfwWin, &currsorPosX, &currsorPosY);
 
     window->mousePrevPos = window->mousePos;
     window->mousePos.X = (float) currsorPosX / window->width;
-    window->mousePos.Y = (float) currsorPosX / window->height;
+    window->mousePos.Y = (float) currsorPosY / window->height;
 
     window->mouseDelta = window->mousePos - window->mousePrevPos;
+
+    // @TODO : that's not the best way to do this...
+    window->leftMouseBtnPressed = glfwGetMouseButton(window->glfwWin, GLFW_MOUSE_BUTTON_1);
+    window->rightMouseBtnPressed = glfwGetMouseButton(window->glfwWin, GLFW_MOUSE_BUTTON_2);
 
     // @TODO: move to Graphics function
     glClearColor(0.6f, 0.6f, 0.6f, 1);
