@@ -27,7 +27,7 @@ struct Mesh
 {
     Slice<Vector3> vertices;
     Slice<Vector3> normals;
-    Slice<Vector3> colors;
+    Slice<Vector4> colors;
     Slice<Vector2> uv;
     Slice<int32_t> triangles;
 
