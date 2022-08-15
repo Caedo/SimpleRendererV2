@@ -38,11 +38,11 @@ int main()
 
         // camera.rotation.y += window.timeDelta;
 
-        int verticalAxis = glfwGetKey(window.glfwWin, GLFW_KEY_W) ? 1  :
-                           glfwGetKey(window.glfwWin, GLFW_KEY_S) ? -1 :
+        int verticalAxis = KeyboardState[KEY_W] ? 1  :
+                           KeyboardState[KEY_S] ? -1 :
                            0;
-        int horizontalAxis = glfwGetKey(window.glfwWin, GLFW_KEY_A) ? 1  :
-                             glfwGetKey(window.glfwWin, GLFW_KEY_D) ? -1 :
+        int horizontalAxis = KeyboardState[KEY_A] ? 1  :
+                             KeyboardState[KEY_D] ? -1 :
                              0;
 
         Vector3 inputVector = Vector3Normalize(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
