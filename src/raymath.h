@@ -2195,4 +2195,10 @@ RMAPI Vector4 operator*(Matrix mat, Vector4 v) {
     return result;
 }
 
+///
+
+RMAPI Vector3 InverseTransform(Matrix mat, Vector3 v) {
+    return MatrixInvert(mat) * v;
+}
+
 #endif  // RAYMATH_H
