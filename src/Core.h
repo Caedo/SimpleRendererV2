@@ -172,6 +172,8 @@ struct SRWindow {
     bool rightMouseBtnPressed;
 
     Input input;
+
+    uint32_t currentShaderId;
 };
 
 SRWindow InitializeWindow(char* name);
@@ -179,9 +181,6 @@ bool ShouldClose(SRWindow* window);
 
 void FrameStart(SRWindow* window);
 void FrameEnd(SRWindow* window);
-
-void FaceCulling(bool enabled);
-void DepthTest(bool enabled);
 
 KeyState GetKeyState(SRWindow* window, Key key);
 bool IsKeyDown(SRWindow* window, Key key);

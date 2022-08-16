@@ -18,6 +18,8 @@ SRWindow InitializeWindow(char* name) {
 
     glfwSetKeyCallback(win.glfwWin, KeyCallback);
 
+    UseShader(&win, ErrorShader);
+
     return win;
 }
 
@@ -65,28 +67,6 @@ void FrameEnd(SRWindow* window) {
     ClearArena(&window->tempArena);
     glfwSwapBuffers(window->glfwWin);
     glfwPollEvents();
-}
-
-
-void FaceCulling(bool enabled) {
-    if(enabled) {
-        glEnable(GL_CULL_FACE);
-
-        glCullFace(GL_BACK);
-        glFrontFace(GL_CCW);
-    }
-    else {
-        glDisable(GL_CULL_FACE);
-    }
-}
-
-void DepthTest(bool enabled) {
-    if(enabled) {
-        glEnable(GL_DEPTH_TEST);
-    }
-    else {
-        glDisable(GL_DEPTH_TEST);
-    }
 }
 
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {

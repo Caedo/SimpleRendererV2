@@ -54,7 +54,40 @@ void InitializeRenderer() {
 
     assert(ErrorShader.isValid);
     assert(ColorShader.isValid);
+    assert(TextureShader.isValid);
     assert(VertexColorShader.isValid);
+}
+
+//=========================================
+// GL state
+//=========================================
+
+void FaceCulling(bool enabled) {
+    if(enabled) {
+        glEnable(GL_CULL_FACE);
+
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
+    }
+    else {
+        glDisable(GL_CULL_FACE);
+    }
+}
+
+void DepthTest(bool enabled) {
+    if(enabled) {
+        glEnable(GL_DEPTH_TEST);
+    }
+    else {
+        glDisable(GL_DEPTH_TEST);
+    }
+}
+
+void UseShader(SRWindow* window, Shader shader) {
+    uint32_t id = shader.isValid ? shader.id : ErrorShader.id;
+
+    window->currentShaderId = id;
+    glUseProgram(id);
 }
 
 //=========================================
@@ -694,11 +727,8 @@ void BindTexture(Texture texture) {
 //     printf("\n");
 // }
 
-void DrawMesh(Mesh mesh, Matrix transform, Shader shader) {
-    uint32_t shaderId = shader.isValid ? shader.id : ErrorShader.id;
-    glUseProgram(shaderId);
-
-    uint32_t mvpLoc = glGetUniformLocation(shaderId, "MVP");
+void DrawMesh(SRWindow* window, Mesh mesh, Matrix transform) {
+    uint32_t mvpLoc = glGetUniformLocation(window->currentShaderId, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&transform));
 
@@ -706,15 +736,12 @@ void DrawMesh(Mesh mesh, Matrix transform, Shader shader) {
     glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
 
-void DrawMesh(Mesh mesh, Camera camera, Matrix transform, Shader shader) {
-    uint32_t shaderId = shader.isValid ? shader.id : ErrorShader.id;
-    glUseProgram(shaderId);
-
+void DrawMesh(SRWindow* window, Mesh mesh, Camera camera, Matrix transform) {
     Matrix projection = GetProjection(&camera);
     Matrix view = GetView(&camera);
     Matrix mvp = projection * view * transform;
 
-    uint32_t mvpLoc = glGetUniformLocation(shader.id, "MVP");
+    uint32_t mvpLoc = glGetUniformLocation(window->currentShaderId, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
 

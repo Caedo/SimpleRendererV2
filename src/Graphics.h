@@ -131,6 +131,14 @@ GLFWwindow* CreateGLFWWindow(int width, int height, char* tittle);
 void InitalizeRenderer();
 
 //=========================================
+// GL state
+//=========================================
+
+void FaceCulling(bool enabled);
+void DepthTest(bool enabled);
+void UseShader(SRWindow* window, Shader shader);
+
+//=========================================
 // Shaders
 //=========================================
 
@@ -167,7 +175,7 @@ void BindTexture(Texture texture);
 //========================================
 // Drawing
 //========================================
-void DrawMesh(Mesh mesh, Matrix transform, Shader shader);
+void DrawMesh(Mesh mesh, Matrix transform);
 
 // DrawMesh(mesh, material, camera, tranform) - standard function
 // DrawMeshColor(mesh, camera, transform, color) - use default shader

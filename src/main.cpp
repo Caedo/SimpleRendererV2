@@ -10,6 +10,7 @@ int main()
     DepthTest(true);
 
     Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag", &window.tempArena);
+    UseShader(&window, shader);
 
     Mesh cube = CreateCubeMesh();
 
@@ -40,11 +41,9 @@ int main()
         Vector3 inputVector = Vector3Normalize(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);
         camera.position = camera.position + inputVector * window.timeDelta * 5;
 
-        DrawMesh(cube, camera, MatrixTranslate(0, 0, 0), shader);
-        DrawMesh(cube, camera, MatrixTranslate(0, 2, 0), shader);
-        DrawMesh(cube, camera, MatrixTranslate(0, 4, 0), shader);
-
-        previousMousePos = currentMousePos;
+        DrawMesh(&window, cube, camera, MatrixTranslate(0, 0, 0));
+        DrawMesh(&window, cube, camera, MatrixTranslate(0, 2, 0));
+        DrawMesh(&window, cube, camera, MatrixTranslate(0, 4, 0));
 
         FrameEnd(&window);
     }
