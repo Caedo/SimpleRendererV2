@@ -1,12 +1,6 @@
-
-
 #ifdef UNITY_BUILD
 #include "unity.cpp"
 #endif
-
-bool mouseDown = false;
-Vector2 previousMousePos;
-Vector2 currentMousePos;
 
 int main()
 {
@@ -36,13 +30,11 @@ int main()
             camera.rotation.x += window.mouseDelta.y;
         }
 
-        // camera.rotation.y += window.timeDelta;
-
-        int verticalAxis = KeyboardState[KEY_W] ? 1  :
-                           KeyboardState[KEY_S] ? -1 :
+        int verticalAxis = IsKeyDown(&window, KEY_W) ? 1  :
+                           IsKeyDown(&window, KEY_S) ? -1 :
                            0;
-        int horizontalAxis = KeyboardState[KEY_A] ? 1  :
-                             KeyboardState[KEY_D] ? -1 :
+        int horizontalAxis = IsKeyDown(&window, KEY_A) ? 1  :
+                             IsKeyDown(&window, KEY_D) ? -1 :
                              0;
 
         Vector3 inputVector = Vector3Normalize(GetCameraRight(&camera) * (float) horizontalAxis + GetCameraForward(&camera) * (float) verticalAxis);

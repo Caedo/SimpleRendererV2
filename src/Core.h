@@ -9,29 +9,9 @@
 
 #include "Memory.h"
 
-struct SRWindow {
-    GLFWwindow* glfwWin;
-    MemoryArena tempArena;
-
-    // @Note: it is size of the framebuffer.
-    // If you want the window size call glfwGetWindowSize()
-    int width;
-    int height;
-
-    double timeSinceStart;
-    double previousFrameTime;
-    float timeDelta;
-
-    Vector2 mousePos;
-    Vector2 mousePrevPos;
-    Vector2 mouseDelta;
-
-    bool leftMouseBtnPressed;
-    bool rightMouseBtnPressed;
-};
-
 // @NOTE: Those values are the same as GLFW ones, so it is
 // trivial to use it in GLFW functions
+// @TODO: naming convetion
 enum Key {
     KEY_UNKNOWN       = 0,
     KEY_SPACE         = 32,
@@ -157,9 +137,42 @@ enum Key {
     MAX_KEY_COUNT
 };
 
-extern bool KeyboardState[MAX_KEY_COUNT];
+enum class KeyState {
+    Unknown,
+    JustPressed,
+    Down,
+    JustReleased,
+    Up,
+};
 
-////////////
+struct Input {
+    bool previousKeys[MAX_KEY_COUNT];
+    bool currentKeys[MAX_KEY_COUNT];
+    // @TODO: move mouse state here?
+};
+
+struct SRWindow {
+    GLFWwindow* glfwWin;
+    MemoryArena tempArena;
+
+    // @Note: it is size of the framebuffer.
+    // If you want the window size call glfwGetWindowSize()
+    int width;
+    int height;
+
+    double timeSinceStart;
+    double previousFrameTime;
+    float timeDelta;
+
+    Vector2 mousePos;
+    Vector2 mousePrevPos;
+    Vector2 mouseDelta;
+
+    bool leftMouseBtnPressed;
+    bool rightMouseBtnPressed;
+
+    Input input;
+};
 
 SRWindow InitializeWindow(char* name);
 bool ShouldClose(SRWindow* window);
@@ -170,6 +183,8 @@ void FrameEnd(SRWindow* window);
 void FaceCulling(bool enabled);
 void DepthTest(bool enabled);
 
-void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+KeyState GetKeyState(SRWindow* window, Key key);
+bool IsKeyDown(SRWindow* window, Key key);
+bool IsKeyUp(SRWindow* window, Key key);
 
 #endif

@@ -1,7 +1,8 @@
 #include "Core.h"
 
-// @TODO embed it somehow into SRWindow struct
 bool KeyboardState[MAX_KEY_COUNT];
+
+void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
 SRWindow InitializeWindow(char* name) {
     SRWindow win = {0};
@@ -45,15 +46,19 @@ void FrameStart(SRWindow* window) {
     window->leftMouseBtnPressed = glfwGetMouseButton(window->glfwWin, GLFW_MOUSE_BUTTON_1);
     window->rightMouseBtnPressed = glfwGetMouseButton(window->glfwWin, GLFW_MOUSE_BUTTON_2);
 
-    // @TODO: move to Graphics function
-    glClearColor(0.6f, 0.6f, 0.6f, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     // @TODO: Add option to configure this behaviour
     int escapeStatus = glfwGetKey(window->glfwWin, GLFW_KEY_ESCAPE);
     if (escapeStatus == GLFW_PRESS) {
         glfwSetWindowShouldClose(window->glfwWin, true);
     }
+
+    memcpy(window->input.currentKeys,  KeyboardState,             sizeof(KeyboardState));
+    memcpy(window->input.previousKeys, window->input.currentKeys, sizeof(KeyboardState));
+
+    // @TODO: move to Graphics function
+    glClearColor(0.6f, 0.6f, 0.6f, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 }
 
 void FrameEnd(SRWindow* window) {
@@ -91,4 +96,30 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
     else {
         KeyboardState[key] = false;
     }
+}
+
+KeyState GetKeyState(SRWindow* window, Key key) {
+    bool curr = window->input.currentKeys[key];
+    bool prev = window->input.previousKeys[key];
+
+    if(curr == false && prev == false) {
+        return KeyState::Up;
+    }
+    else if(curr == false && prev == true) {
+        return KeyState::JustReleased;
+    }
+    else if(curr == true && prev == false) {
+        return KeyState::JustPressed;
+    }
+    else {
+        return KeyState::Down;
+    }
+}
+
+bool IsKeyDown(SRWindow* window, Key key) {
+    return window->input.currentKeys[key];
+}
+
+bool IsKeyUp(SRWindow* window, Key key) {
+    return window->input.currentKeys[key] == false;
 }
