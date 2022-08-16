@@ -11,6 +11,7 @@
 
 Shader ErrorShader;
 Shader ColorShader;
+Shader TextureShader;
 Shader VertexColorShader;
 
 //=========================================
@@ -48,6 +49,7 @@ void InitializeRenderer() {
 
     ErrorShader = LoadShaderSource(DefaultVertexShaderSource, ErrorFragmentShaderSource);
     ColorShader = LoadShaderSource(DefaultVertexShaderSource, ColorShaderSource);
+    TextureShader = LoadShaderSource(DefaultVertexShaderSource, TextureShaderSource);
     VertexColorShader = LoadShaderSource(DefaultVertexShaderSource, VertexColorShaderSource);
 
     assert(ErrorShader.isValid);
@@ -326,6 +328,7 @@ Mesh CreateCubeMesh()
 
     mesh.vertices  = AllocateSlice<Vector3>(24);
     mesh.normals   = AllocateSlice<Vector3>(24);
+    mesh.uv        = AllocateSlice<Vector2>(24);
     mesh.colors    = AllocateSlice<Vector4>(24);
     mesh.triangles = AllocateSlice<int>(36);
 
@@ -340,6 +343,11 @@ Mesh CreateCubeMesh()
     mesh.colors[2] = {0, 1, 1, 1};
     mesh.colors[3] = {1, 0, 0, 1};
 
+    mesh.uv[0] = {1, 1};
+    mesh.uv[1] = {1, 0};
+    mesh.uv[2] = {0, 0};
+    mesh.uv[3] = {0, 1};
+
     // back
     mesh.vertices[4] = {0.5f, 0.5f, -0.5f},   // top right 4
     mesh.vertices[5] = {0.5f, -0.5f, -0.5f},  // bottom right 5
@@ -350,6 +358,11 @@ Mesh CreateCubeMesh()
     mesh.colors[5] = {1, 1, 0, 1};
     mesh.colors[6] = {1, 1, 1, 1};
     mesh.colors[7] = {0, 0, 0, 1};
+
+    mesh.uv[4] = {1, 1};
+    mesh.uv[5] = {1, 0};
+    mesh.uv[6] = {0, 0};
+    mesh.uv[7] = {0, 1};
 
     // left
     mesh.vertices[8] = {-0.5f, 0.5f, 0.5f},   // top front 8
@@ -362,6 +375,11 @@ Mesh CreateCubeMesh()
     mesh.colors[10] = {1, 1, 1, 1};
     mesh.colors[11] = {0, 0, 0, 1};
 
+    mesh.uv[8] = {1, 1};
+    mesh.uv[9] = {1, 0};
+    mesh.uv[10] = {0, 0};
+    mesh.uv[11] = {0, 1};
+
     // right
     mesh.vertices[12] = {0.5f, 0.5f, 0.5f},   // top front 12
     mesh.vertices[13] = {0.5f, -0.5f, 0.5f},  // bottom front 13
@@ -372,6 +390,11 @@ Mesh CreateCubeMesh()
     mesh.colors[13] = {0, 1, 0, 1};
     mesh.colors[14] = {1, 1, 0, 1};
     mesh.colors[15] = {1, 0, 1, 1};
+
+    mesh.uv[12] = {1, 1};
+    mesh.uv[13] = {1, 0};
+    mesh.uv[14] = {0, 0};
+    mesh.uv[15] = {0, 1};
 
     // top
     mesh.vertices[16] = {-0.5f, 0.5f, 0.5f},  // left front 16
@@ -384,6 +407,11 @@ Mesh CreateCubeMesh()
     mesh.colors[18] = {1, 0, 1, 1};
     mesh.colors[19] = {0, 0, 0, 1};
 
+    mesh.uv[16] = {1, 1};
+    mesh.uv[17] = {1, 0};
+    mesh.uv[18] = {0, 0};
+    mesh.uv[19] = {0, 1};
+
     // bottom
     mesh.vertices[20] = {-0.5f, -0.5f, 0.5f},  // left front 20
     mesh.vertices[21] = {0.5f, -0.5f, 0.5f},   // right front 21
@@ -394,6 +422,11 @@ Mesh CreateCubeMesh()
     mesh.colors[21] = {0, 1, 0, 1};
     mesh.colors[22] = {1, 1, 0, 1};
     mesh.colors[23] = {1, 1, 1, 1};
+
+    mesh.uv[20] = {1, 1};
+    mesh.uv[21] = {1, 0};
+    mesh.uv[22] = {0, 0};
+    mesh.uv[23] = {0, 1};
 
     // {
     //     0, 2, 1,    //

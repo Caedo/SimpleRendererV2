@@ -67,14 +67,17 @@ const char* DefaultVertexShaderSource =
 "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec3 aNorm;\n"
+"layout (location = 2) in vec2 aUV;\n"
 "layout (location = 3) in vec4 aColor;\n"
 "out vec3 pos;\n"
 "out vec3 normal;\n"
+"out vec2 uv;\n"
 "out vec4 vertexColor;\n"
 "uniform mat4 MVP;\n"
 "void main() {\n"
 "    pos = aPos;\n"
 "    normal = aNorm;\n"
+"    uv = aUV;\n"
 "    vertexColor = aColor;\n"
 "\n"
 "    gl_Position = MVP * vec4(aPos, 1.0);\n"
@@ -83,7 +86,6 @@ const char* DefaultVertexShaderSource =
 const char* VertexColorShaderSource =
 "#version 330 core\n"
 "uniform vec4 tint;\n"
-"in vec3 pos;\n"
 "in vec4 vertexColor;\n"
 "out vec4 FragColor;\n"
 "void main() {\n"
@@ -93,10 +95,20 @@ const char* VertexColorShaderSource =
 const char* ColorShaderSource =
 "#version 330 core\n"
 "uniform vec4 tint;\n"
-"in vec3 pos;\n"
 "out vec4 FragColor;\n"
 "void main() {\n"
 "    FragColor = tint;\n"
+"}";
+
+const char* TextureShaderSource =
+"#version 330 core\n"
+"uniform vec4 tint;\n"
+"uniform sampler2D tex;\n"
+"in vec2 uv;\n"
+"out vec4 FragColor;\n"
+"void main() {\n"
+"    vec4 color = texture(tex, uv);\n"
+"    FragColor = color;\n"
 "}";
 
 const char* ErrorFragmentShaderSource =
@@ -108,6 +120,7 @@ const char* ErrorFragmentShaderSource =
 
 extern Shader ErrorShader;
 extern Shader ColorShader;
+extern Shader TextureShader;
 extern Shader VertexColorShader;
 
 //=========================================
