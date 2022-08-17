@@ -14,6 +14,8 @@ SRWindow InitializeWindow(char* name) {
     win.glfwWin = CreateGLFWWindow(800, 600, name);
     InitializeRenderer();
 
+    InitBatch(&win.screenSpaceBatch);
+
     win.tempArena = CreateArena();
 
     glfwSetKeyCallback(win.glfwWin, KeyCallback);
@@ -64,10 +66,16 @@ void FrameStart(SRWindow* window) {
 }
 
 void FrameEnd(SRWindow* window) {
+    RenderBatch(window, &window->screenSpaceBatch);
+
     ClearArena(&window->tempArena);
     glfwSwapBuffers(window->glfwWin);
     glfwPollEvents();
 }
+
+//========================================
+// Input
+// =======================================
 
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if(action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -102,4 +110,63 @@ bool IsKeyDown(SRWindow* window, Key key) {
 
 bool IsKeyUp(SRWindow* window, Key key) {
     return window->input.currentKeys[key] == false;
+}
+
+//========================================
+// Batch
+// =======================================
+void InitBatch(Batch* batch) {
+    glGenVertexArrays(1, &batch->VAO);
+    glBindVertexArray(batch->VAO);
+
+    glGenBuffers(1, &batch->VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, batch->VBO);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BatchVertex), (void*)offsetof(BatchVertex, position));
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(BatchVertex), (void*)offsetof(BatchVertex, uv));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(BatchVertex), (void*)offsetof(BatchVertex, color));
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(BatchVertex) * BATCH_MAX_SIZE, NULL, GL_STREAM_DRAW);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void AddBatchVertex(SRWindow* window, Batch* batch, Vector3 pos) {
+    BatchVertex v = {
+        pos,
+        {0, 0},
+        {1, 1, 1, 1}
+    };
+
+    AddBatchVertex(window, batch, v);
+}
+
+void AddBatchVertex(SRWindow* window, Batch* batch, BatchVertex v) {
+    size_t index = batch->currentSize;
+    if(index >= BATCH_MAX_SIZE) {
+        RenderBatch(window, batch);
+        index = 0;
+    }
+
+    batch->vertices[index] = v;
+
+    batch->currentSize++;
+}
+
+void AddBatchVertices(SRWindow* window, Batch* batch, Slice<BatchVertex> vertices) {
+    size_t* index = &batch->currentSize;
+    if(*index + vertices.length >= BATCH_MAX_SIZE) {
+        RenderBatch(window, batch);
+        index = 0;
+    }
+
+    for(int i = 0; i < vertices.length; i++) {
+        batch->vertices[(*index)++] = vertices[i];
+    }
 }

@@ -13,6 +13,7 @@ Shader ErrorShader;
 Shader ColorShader;
 Shader TextureShader;
 Shader VertexColorShader;
+Shader ScreenSpaceShader;
 
 //=========================================
 // Initialization
@@ -51,18 +52,21 @@ void InitializeRenderer() {
     ColorShader = LoadShaderSource(DefaultVertexShaderSource, ColorShaderSource);
     TextureShader = LoadShaderSource(DefaultVertexShaderSource, TextureShaderSource);
     VertexColorShader = LoadShaderSource(DefaultVertexShaderSource, VertexColorShaderSource);
+    ScreenSpaceShader = LoadShaderSource(ScreenSpaceVertexSource, ScreenSpaceFragmentSource);
 
     assert(ErrorShader.isValid);
     assert(ColorShader.isValid);
     assert(TextureShader.isValid);
     assert(VertexColorShader.isValid);
+    assert(ScreenSpaceShader.isValid);
 }
 
 //=========================================
 // GL state
 //=========================================
 
-void FaceCulling(bool enabled) {
+void FaceCulling(SRWindow* window, bool enabled) {
+    window->faceCulling = enabled;
     if(enabled) {
         glEnable(GL_CULL_FACE);
 
@@ -74,7 +78,9 @@ void FaceCulling(bool enabled) {
     }
 }
 
-void DepthTest(bool enabled) {
+void DepthTest(SRWindow* window, bool enabled) {
+    window->depthTest = enabled;
+
     if(enabled) {
         glEnable(GL_DEPTH_TEST);
     }
@@ -748,3 +754,61 @@ void DrawMesh(SRWindow* window, Mesh mesh, Camera camera, Matrix transform) {
     glBindVertexArray(mesh.VAO);
     glDrawElements(GL_TRIANGLES, (GLsizei) mesh.triangles.length, GL_UNSIGNED_INT, 0);
 }
+
+//========================================
+// Batch
+//========================================
+void RenderBatch(SRWindow* window, Batch* batch) {
+    if(batch->currentSize == 0) {
+        return;
+    }
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+
+    glUseProgram(ScreenSpaceShader.id);
+
+    glBindVertexArray(batch->VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, batch->VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(BatchVertex) * batch->currentSize, batch->vertices);
+
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei) batch->currentSize);
+
+    batch->currentSize = 0;
+
+    // Restore previous GL State
+    if(window->faceCulling) {
+        glEnable(GL_CULL_FACE);
+    }
+
+    if(window->depthTest) {
+        glEnable(GL_DEPTH_TEST);
+    }
+
+    glUseProgram(window->currentShaderId);
+}
+
+//========================================
+// Screen Space drawing
+//========================================
+void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
+    float left  = rect.x;
+    float right = rect.x + rect.width;
+    float top   = rect.y;
+    float bot   = rect.y + rect.height;
+
+    BatchVertex vertices[6];
+    vertices[0] = {{left,  top, 0}, {0, 0}, color};
+    vertices[1] = {{right, top, 0}, {1, 0}, color};
+    vertices[2] = {{right, bot, 0}, {1, 1}, color};
+
+    vertices[3] = {{left,  top, 0}, {0, 0}, color};
+    vertices[4] = {{right, bot, 0}, {1, 1}, color};
+    vertices[5] = {{left,  bot, 0}, {0, 1}, color};
+
+    AddBatchVertices(window, &window->screenSpaceBatch, MakeSlice(vertices, 0, 6));
+}
+
+void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin);
+void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination);
+

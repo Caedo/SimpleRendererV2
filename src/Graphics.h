@@ -8,8 +8,6 @@
 
 #include "stb/stb_image.h"
 
-struct GLFWwindow;
-
 enum VertexBufferIndex {
     VertexPositionIndex = 0,
     VertexNormalIndex   = 1,
@@ -57,6 +55,11 @@ struct Texture {
 
     // @TODO: mipmaps
     // @TODO: texture units
+};
+
+struct Rect {
+    float x, y;
+    float width, height;
 };
 
 //=========================================
@@ -118,10 +121,49 @@ const char* ErrorFragmentShaderSource =
 "    FragColor = vec4(1, 0, 1, 1);\n"
 "}";
 
+
+const char* ScreenSpaceVertexSource = 
+R"###(#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec2 aUV;
+layout (location = 2) in vec4 aColor;
+
+out vec2 uv;
+out vec4 vertexColor;
+
+vec3 ScreenToClip(vec3 pos) {
+    vec2 p = pos.xy / vec2(800, 600);
+    p = p * 2 - 1;
+    p.y *= -1;
+
+    return vec3(p.x, p.y, 0);
+}
+
+void main() {
+    uv = aUV;
+    vertexColor = aColor;
+
+    gl_Position = vec4(ScreenToClip(aPos), 1);
+})###";
+
+
+const char* ScreenSpaceFragmentSource = 
+R"###(#version 330 core
+in vec2 uv;
+in vec4 vertexColor;
+
+out vec4 FragColor;
+
+void main() {
+    FragColor = vertexColor;
+})###";
+
 extern Shader ErrorShader;
 extern Shader ColorShader;
 extern Shader TextureShader;
 extern Shader VertexColorShader;
+
+extern Shader ScreenSpaceShader;
 
 //=========================================
 // Initialization
@@ -134,8 +176,8 @@ void InitalizeRenderer();
 // GL state
 //=========================================
 
-void FaceCulling(bool enabled);
-void DepthTest(bool enabled);
+void FaceCulling(SRWindow* window, bool enabled);
+void DepthTest(SRWindow* window, bool enabled);
 void UseShader(SRWindow* window, Shader shader);
 
 //=========================================
@@ -177,13 +219,18 @@ void BindTexture(Texture texture);
 //========================================
 void DrawMesh(Mesh mesh, Matrix transform);
 
-// DrawMesh(mesh, material, camera, tranform) - standard function
-// DrawMeshColor(mesh, camera, transform, color) - use default shader
-// DrawMeshTexture(mesh, camera, transform, Texture) - use texture shader
 
-// Screen space functions - I need them for microui anyway
-// DrawRect(destination, color);
-// DrawImage(destination, color);
-// DrawImage(source, destination, color);
+//========================================
+// Batch
+// =======================================
+void RenderBatch(SRWindow* window, Batch* batch);
+
+//========================================
+// Screen Space drawing
+//========================================
+void DrawRect(SRWindow* window, Rect rect, Vector4 color);
+void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin);
+void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination);
+
 
 #endif // GRAPHICS_H

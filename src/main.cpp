@@ -6,13 +6,13 @@ int main()
 {
     SRWindow window = InitializeWindow("Window");
 
-    FaceCulling(true);
-    DepthTest(true);
-
     Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag", &window.tempArena);
     UseShader(&window, shader);
 
     Mesh cube = CreateCubeMesh();
+
+    FaceCulling(&window, true);
+    DepthTest(&window, true);
 
     Camera camera = CreatePerspective(90.0f, 0.01f, 1000, 800, 600);
     // camera = CreateOrtographic(3, 0.1f, 1000.0, 800, 600);
@@ -26,6 +26,7 @@ int main()
     {
         FrameStart(&window);
 
+ 
         if(window.leftMouseBtnPressed) {
             camera.rotation.y += window.mouseDelta.x;
             camera.rotation.x += window.mouseDelta.y;
@@ -44,6 +45,11 @@ int main()
         DrawMesh(&window, cube, camera, MatrixTranslate(0, 0, 0));
         DrawMesh(&window, cube, camera, MatrixTranslate(0, 2, 0));
         DrawMesh(&window, cube, camera, MatrixTranslate(0, 4, 0));
+
+        DrawRect(&window, {0, 0, 50, 80}, {1, 0, 0, 1});
+        DrawRect(&window, {55, 0, 50, 80}, {0, 1, 0, 1});
+        DrawRect(&window, {110, 0, 50, 80}, {0, 0, 0, 1});
+        DrawRect(&window, {165, 0, 50, 80}, {0, 1, 1, 1});
 
         FrameEnd(&window);
     }

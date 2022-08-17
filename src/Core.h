@@ -151,6 +151,22 @@ struct Input {
     // @TODO: move mouse state here?
 };
 
+struct BatchVertex {
+    Vector3 position;
+    Vector2 uv;
+    Vector4 color;
+};
+
+// @NOTE @TODO eyeballing this value, check if it's enought or to much
+#define BATCH_MAX_SIZE 1024
+struct Batch {
+    size_t currentSize;
+    BatchVertex vertices[BATCH_MAX_SIZE];
+
+    uint32_t VAO;
+    uint32_t VBO;
+};
+
 struct SRWindow {
     GLFWwindow* glfwWin;
     MemoryArena tempArena;
@@ -174,6 +190,10 @@ struct SRWindow {
     Input input;
 
     uint32_t currentShaderId;
+    bool faceCulling;
+    bool depthTest;
+
+    Batch screenSpaceBatch;
 };
 
 SRWindow InitializeWindow(char* name);
@@ -182,8 +202,20 @@ bool ShouldClose(SRWindow* window);
 void FrameStart(SRWindow* window);
 void FrameEnd(SRWindow* window);
 
+//========================================
+// Input
+// =======================================
 KeyState GetKeyState(SRWindow* window, Key key);
 bool IsKeyDown(SRWindow* window, Key key);
 bool IsKeyUp(SRWindow* window, Key key);
+
+//========================================
+// Batch
+// =======================================
+void InitBatch(Batch* batch);
+void AddBatchVertex(SRWindow* window, Batch* batch, Vector2 pos);
+void AddBatchVertex(SRWindow* window, Batch* batch, BatchVertex v);
+
+void AddBatchVertices(SRWindow* window, Batch*, Slice<BatchVertex> vertices);
 
 #endif
