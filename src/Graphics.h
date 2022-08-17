@@ -67,59 +67,59 @@ struct Rect {
 //=========================================
 
 const char* DefaultVertexShaderSource = 
-"#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec3 aNorm;\n"
-"layout (location = 2) in vec2 aUV;\n"
-"layout (location = 3) in vec4 aColor;\n"
-"out vec3 pos;\n"
-"out vec3 normal;\n"
-"out vec2 uv;\n"
-"out vec4 vertexColor;\n"
-"uniform mat4 MVP;\n"
-"void main() {\n"
-"    pos = aPos;\n"
-"    normal = aNorm;\n"
-"    uv = aUV;\n"
-"    vertexColor = aColor;\n"
-"\n"
-"    gl_Position = MVP * vec4(aPos, 1.0);\n"
-"}";
+R"###(#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNorm;
+layout (location = 2) in vec2 aUV;
+layout (location = 3) in vec4 aColor;
+out vec3 pos;
+out vec3 normal;
+out vec2 uv;
+out vec4 vertexColor;
+uniform mat4 MVP;
+void main() {
+    pos = aPos;
+    normal = aNorm;
+    uv = aUV;
+    vertexColor = aColor;
+
+    gl_Position = MVP * vec4(aPos, 1.0);
+})###";
 
 const char* VertexColorShaderSource =
-"#version 330 core\n"
-"uniform vec4 tint;\n"
-"in vec4 vertexColor;\n"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"    FragColor = vertexColor;\n"
-"}";
+R"###(#version 330 core
+uniform vec4 tint;
+in vec4 vertexColor;
+out vec4 FragColor;
+void main() {
+    FragColor = vertexColor;
+})###";
 
 const char* ColorShaderSource =
-"#version 330 core\n"
-"uniform vec4 tint;\n"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"    FragColor = tint;\n"
-"}";
+R"###(#version 330 core
+uniform vec4 tint;
+out vec4 FragColor;
+void main() {
+    FragColor = tint;
+})###";
 
 const char* TextureShaderSource =
-"#version 330 core\n"
-"uniform vec4 tint;\n"
-"uniform sampler2D tex;\n"
-"in vec2 uv;\n"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"    vec4 color = texture(tex, uv);\n"
-"    FragColor = color;\n"
-"}";
+R"###(#version 330 core
+uniform vec4 tint;
+uniform sampler2D tex;
+in vec2 uv;
+out vec4 FragColor;
+void main() {
+    vec4 color = texture(tex, uv);
+    FragColor = color;
+})###";
 
 const char* ErrorFragmentShaderSource =
-"#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"    FragColor = vec4(1, 0, 1, 1);\n"
-"}";
+R"###(#version 330 core
+out vec4 FragColor;
+void main() {
+    FragColor = vec4(1, 0, 1, 1);
+})###";
 
 
 const char* ScreenSpaceVertexSource = 
