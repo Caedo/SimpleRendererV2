@@ -163,6 +163,9 @@ struct Batch {
     size_t currentSize;
     BatchVertex vertices[BATCH_MAX_SIZE];
 
+    uint32_t whiteTextureId;
+    uint32_t usedTextureId;
+
     uint32_t VAO;
     uint32_t VBO;
 };

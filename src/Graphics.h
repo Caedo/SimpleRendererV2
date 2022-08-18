@@ -152,10 +152,13 @@ R"###(#version 330 core
 in vec2 uv;
 in vec4 vertexColor;
 
+uniform sampler2D tex;
+
 out vec4 FragColor;
 
 void main() {
-    FragColor = vertexColor;
+    vec4 col = texture(tex, uv);
+    FragColor = vertexColor * col;
 })###";
 
 extern Shader ErrorShader;

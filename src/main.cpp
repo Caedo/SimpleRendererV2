@@ -9,6 +9,9 @@ int main()
     Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag", &window.tempArena);
     UseShader(&window, shader);
 
+    Texture texture = LoadTextureAtPath("av.png", &window.tempArena);
+    BindTexture(texture);
+
     Mesh cube = CreateCubeMesh();
 
     FaceCulling(&window, true);
@@ -50,6 +53,8 @@ int main()
         DrawRect(&window, {55, 0, 50, 80}, {0, 1, 0, 1});
         DrawRect(&window, {110, 0, 50, 80}, {0, 0, 0, 1});
         DrawRect(&window, {165, 0, 50, 80}, {0, 1, 1, 1});
+        DrawTexture(&window, texture, {220, 0}, {0, 0});
+        DrawTextureFragment(&window, texture, {0, 0, 0.5, 0.5}, {450, 0, 50, 80});
 
         FrameEnd(&window);
     }

@@ -768,6 +768,8 @@ void RenderBatch(SRWindow* window, Batch* batch) {
 
     glUseProgram(ScreenSpaceShader.id);
 
+    glBindTexture(GL_TEXTURE_2D, batch->usedTextureId);
+
     glBindVertexArray(batch->VAO);
     glBindBuffer(GL_ARRAY_BUFFER, batch->VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(BatchVertex) * batch->currentSize, batch->vertices);
@@ -775,6 +777,7 @@ void RenderBatch(SRWindow* window, Batch* batch) {
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei) batch->currentSize);
 
     batch->currentSize = 0;
+    batch->usedTextureId = batch->whiteTextureId;
 
     // Restore previous GL State
     if(window->faceCulling) {
@@ -786,12 +789,20 @@ void RenderBatch(SRWindow* window, Batch* batch) {
     }
 
     glUseProgram(window->currentShaderId);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 //========================================
 // Screen Space drawing
 //========================================
 void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
+    Batch* batch = &window->screenSpaceBatch;
+    if(batch->usedTextureId != batch->whiteTextureId) {
+        RenderBatch(window, &window->screenSpaceBatch);
+    }
+
+    batch->usedTextureId = batch->whiteTextureId;
+
     float left  = rect.x;
     float right = rect.x + rect.width;
     float top   = rect.y;
@@ -809,6 +820,57 @@ void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
     AddBatchVertices(window, &window->screenSpaceBatch, MakeSlice(vertices, 0, 6));
 }
 
-void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin);
-void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination);
+void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin) {
+    if(window->screenSpaceBatch.usedTextureId != texture.id) {
+        RenderBatch(window, &window->screenSpaceBatch);
+    }
+
+    window->screenSpaceBatch.usedTextureId = texture.id;
+
+    float left  = position.x - texture.width * origin.x;
+    float right = position.x + texture.width * (1 - origin.x);
+    float top   = position.y - texture.height * origin.y;
+    float bot   = position.y + texture.height * (1 - origin.y);
+
+    BatchVertex vertices[6];
+    vertices[0] = {{left,  top, 0}, {0, 0}, {1, 1, 1, 1}};
+    vertices[1] = {{right, top, 0}, {1, 0}, {1, 1, 1, 1}};
+    vertices[2] = {{right, bot, 0}, {1, 1}, {1, 1, 1, 1}};
+
+    vertices[3] = {{left,  top, 0}, {0, 0}, {1, 1, 1, 1}};
+    vertices[4] = {{right, bot, 0}, {1, 1}, {1, 1, 1, 1}};
+    vertices[5] = {{left,  bot, 0}, {0, 1}, {1, 1, 1, 1}};
+
+    AddBatchVertices(window, &window->screenSpaceBatch, MakeSlice(vertices, 0, 6));
+}
+
+void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination){
+    if(window->screenSpaceBatch.usedTextureId != texture.id) {
+        RenderBatch(window, &window->screenSpaceBatch);
+    }
+
+    window->screenSpaceBatch.usedTextureId = texture.id;
+
+    float left  = destination.x;
+    float right = destination.x + destination.width;
+    float top   = destination.y;
+    float bot   = destination.y + destination.height;
+
+    float uvLeft  = source.x;
+    float uvRight = source.x + source.width;
+    float uvTop   = source.y;
+    float uvBot   = source.y + source.height;
+
+
+    BatchVertex vertices[6];
+    vertices[0] = {{left,  top, 0}, {uvLeft,  uvTop}, {1, 1, 1, 1}};
+    vertices[1] = {{right, top, 0}, {uvRight, uvTop}, {1, 1, 1, 1}};
+    vertices[2] = {{right, bot, 0}, {uvRight, uvBot}, {1, 1, 1, 1}};
+
+    vertices[3] = {{left,  top, 0}, {uvLeft,  uvTop}, {1, 1, 1, 1}};
+    vertices[4] = {{right, bot, 0}, {uvRight, uvBot}, {1, 1, 1, 1}};
+    vertices[5] = {{left,  bot, 0}, {uvLeft,  uvBot}, {1, 1, 1, 1}};
+
+    AddBatchVertices(window, &window->screenSpaceBatch, MakeSlice(vertices, 0, 6));
+}
 
