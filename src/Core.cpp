@@ -166,25 +166,23 @@ void AddBatchVertex(SRWindow* window, Batch* batch, Vector3 pos) {
 }
 
 void AddBatchVertex(SRWindow* window, Batch* batch, BatchVertex v) {
-    size_t index = batch->currentSize;
-    if(index >= BATCH_MAX_SIZE) {
+    if(batch->currentSize + 1 >= BATCH_MAX_SIZE) {
         RenderBatch(window, batch);
-        index = 0;
     }
 
-    batch->vertices[index] = v;
-
+    batch->vertices[batch->currentSize] = v;
     batch->currentSize++;
 }
 
 void AddBatchVertices(SRWindow* window, Batch* batch, Slice<BatchVertex> vertices) {
-    size_t* index = &batch->currentSize;
-    if(*index + vertices.length >= BATCH_MAX_SIZE) {
+    if(batch->currentSize + vertices.length >= BATCH_MAX_SIZE) {
         RenderBatch(window, batch);
-        index = 0;
     }
 
+    size_t index = batch->currentSize;
     for(int i = 0; i < vertices.length; i++) {
-        batch->vertices[(*index)++] = vertices[i];
+        batch->vertices[index++] = vertices[i];
     }
+
+    batch->currentSize = index;
 }
