@@ -175,7 +175,7 @@ struct SRWindow {
     MemoryArena tempArena;
 
     // @Note: it is size of the framebuffer.
-    // If you want the window size call glfwGetWindowSize()
+    // If you want the window size call glfwGetWindowFrameSize()
     int width;
     int height;
 
@@ -197,9 +197,11 @@ struct SRWindow {
     bool depthTest;
 
     Batch screenSpaceBatch;
+
+    bool resizedThisFrame;
 };
 
-SRWindow InitializeWindow(char* name);
+SRWindow* InitializeWindow(char* name);
 bool ShouldClose(SRWindow* window);
 
 void FrameStart(SRWindow* window);

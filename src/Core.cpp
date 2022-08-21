@@ -1,28 +1,49 @@
 #include "Core.h"
 
+#include "imgui/imgui.h"
+
+SRWindow windowInstance = {};
+
 bool KeyboardState[MAX_KEY_COUNT];
 
-void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void ResizeCallback(GLFWwindow* window, int width, int height);
 
-SRWindow InitializeWindow(char* name) {
-    SRWindow win = {0};
-
+SRWindow* InitializeWindow(char* name) {
     // @TODO: expose width and height to use code
-    win.width = 800;
-    win.height = 600;
+    windowInstance.width = 800;
+    windowInstance.height = 600;
 
-    win.glfwWin = CreateGLFWWindow(800, 600, name);
+    windowInstance.glfwWin = CreateGLFWWindow(800, 600, name);
     InitializeRenderer();
 
-    InitBatch(&win.screenSpaceBatch);
+    InitBatch(&windowInstance.screenSpaceBatch);
 
-    win.tempArena = CreateArena();
+    windowInstance.tempArena = CreateArena();
 
-    glfwSetKeyCallback(win.glfwWin, KeyCallback);
+    glfwSetKeyCallback(windowInstance.glfwWin, KeyCallback);
+    glfwSetFramebufferSizeCallback(windowInstance.glfwWin, ResizeCallback);
 
-    UseShader(&win, ErrorShader);
+    UseShader(&windowInstance, ErrorShader);
 
-    return win;
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsClassic();
+    
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(windowInstance.glfwWin, true);
+    ImGui_ImplOpenGL3_Init("#version 330 core");
+
+
+    return &windowInstance;
 }
 
 bool ShouldClose(SRWindow* window) {
@@ -56,21 +77,38 @@ void FrameStart(SRWindow* window) {
         glfwSetWindowShouldClose(window->glfwWin, true);
     }
 
-    memcpy(window->input.currentKeys,  KeyboardState,             sizeof(KeyboardState));
-    memcpy(window->input.previousKeys, window->input.currentKeys, sizeof(KeyboardState));
+    memcpy(window->input.previousKeys, window->input.currentKeys, sizeof(window->input.previousKeys));
 
     // @TODO: move to Graphics function
     glClearColor(0.6f, 0.6f, 0.6f, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 }
 
 void FrameEnd(SRWindow* window) {
     RenderBatch(window, &window->screenSpaceBatch);
 
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
     ClearArena(&window->tempArena);
     glfwSwapBuffers(window->glfwWin);
     glfwPollEvents();
+
+    window->resizedThisFrame = false;
+}
+
+void ResizeCallback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+
+    windowInstance.width = width;
+    windowInstance.height = height;
+
+    windowInstance.resizedThisFrame = true;
 }
 
 //========================================
@@ -79,10 +117,10 @@ void FrameEnd(SRWindow* window) {
 
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if(action == GLFW_PRESS || action == GLFW_REPEAT) {
-        KeyboardState[key] = true;
+        windowInstance.input.currentKeys[key] = true;
     }
     else {
-        KeyboardState[key] = false;
+        windowInstance.input.currentKeys[key] = false;
     }
 }
 

@@ -1,27 +1,27 @@
 #include "Camera.h"
 
-Camera CreateOrtographic(float ortographicSize, float nearPlane, float farPlane, int widthAspect, int heightAspect)
+Camera CreateOrtographic(float ortographicSize, float nearPlane, float farPlane, float aspect)
 {
     Camera ret = {0};
 
     ret.ortographicSize = ortographicSize;
     ret.nearPlane = nearPlane;
     ret.farPlane = farPlane;
-    ret.aspect = (float)widthAspect / heightAspect;
+    ret.aspect = aspect;
 
     ret.cameraType = CameraType::Orthographic;
 
     return ret;
 }
 
-Camera CreatePerspective(float fov, float nearPlane, float farPlane, int widthAspect, int heightAspect)
+Camera CreatePerspective(float fov, float nearPlane, float farPlane, float aspect)
 {
     Camera ret = {0};
 
     ret.fov = fov * DEG2RAD;
     ret.farPlane = farPlane;
     ret.nearPlane = nearPlane;
-    ret.aspect = (float)widthAspect / heightAspect;
+    ret.aspect = aspect;
 
     ret.cameraType = CameraType::Perspective;
 
