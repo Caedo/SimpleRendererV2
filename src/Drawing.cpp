@@ -1,4 +1,4 @@
-#include "Core.h"
+#include "SimpleRenderer.h"
 
 #include <stdio.h>
 #include <stdlib.h>

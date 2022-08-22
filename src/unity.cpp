@@ -3,8 +3,7 @@
 #undef RAYMATH_IMPLEMENTATION
 
 
-#include "Camera.cpp"
-#include "Graphics.cpp"
+#include "Drawing.cpp"
 #include "glad.c"
 
 #define IMGUI_IMPL_OPENGL_LOADER_CUSTOM
