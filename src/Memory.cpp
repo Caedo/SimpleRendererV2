@@ -1,4 +1,8 @@
-#include "memory.h"
+#include "Memory.h"
+
+// ============================
+// Memory Arena
+// ============================
 
 MemoryArena CreateArena() {
     MemoryArena ret = {};
@@ -43,4 +47,33 @@ void DestroyArena(MemoryArena* arena) {
     arena->baseAddres = 0;
     arena->allocatedOffset = 0;
     arena->commitedOffset = 0;
+}
+
+//===========================
+// Slice
+//===========================
+
+template <typename T>
+Slice<T> MakeSlice(T* array, int start, int end) {
+    Slice<T> ret = {0};
+    int len = end - start;
+
+    if(len > 0) {
+        ret.data = array + start;
+        ret.length = len;
+    }
+
+    return ret;
+}
+
+
+template <typename T>
+Slice<T> AllocateSlice(int length) {
+    Slice<T> ret = {0};
+
+    ret.length = length;
+    ret.data = (T*) malloc(sizeof(T) * length);
+    assert(ret.data);
+
+    return ret;
 }

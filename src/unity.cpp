@@ -1,5 +1,3 @@
-#include "Array.cpp"
-
 #define RAYMATH_IMPLEMENTATION
 #include "raymath.h"
 #undef RAYMATH_IMPLEMENTATION
