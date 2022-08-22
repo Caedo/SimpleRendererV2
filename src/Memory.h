@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <assert.h>
+#include <malloc.h>
 
 #define Bytes(n) n
 #define Kilobytes(n) (1024 * (uint64_t)(n))
@@ -24,6 +25,7 @@ struct MemoryArena {
     uint64_t commitedOffset;
 };
 
+MemoryArena CreateArena();
 void* PushArena(MemoryArena* arena, uint64_t size);
 void ClearArena(MemoryArena* arena);
 void DestroyArena(MemoryArena* arena);
@@ -49,5 +51,29 @@ Slice<T> MakeSlice(T* array, int start, int end);
 template <typename T>
 Slice<T> AllocateSlice(int length);
 
+template <typename T>
+Slice<T> MakeSlice(T* array, int start, int end) {
+    Slice<T> ret = {0};
+    int len = end - start;
+
+    if(len > 0) {
+        ret.data = array + start;
+        ret.length = len;
+    }
+
+    return ret;
+}
+
+
+template <typename T>
+Slice<T> AllocateSlice(int length) {
+    Slice<T> ret = {0};
+
+    ret.length = length;
+    ret.data = (T*) malloc(sizeof(T) * length);
+    assert(ret.data);
+
+    return ret;
+}
 
 #endif

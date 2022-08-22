@@ -1,5 +1,5 @@
-#ifndef CORE_H
-#define CORE_H
+#ifndef SIMPLERENDERER_H
+#define SIMPLERENDERER_H
 
 #define GLFW_DLL
 #define GLFW_INCLUDE_NONE
@@ -9,6 +9,7 @@
 
 #include "Memory.h"
 
+#include "raymath.h"
 
 enum class CameraType
 {
@@ -292,106 +293,6 @@ struct SRWindow {
     bool resizedThisFrame;
 };
 
-
-//=========================================
-// Default shaders
-//=========================================
-
-const char* DefaultVertexShaderSource = 
-R"###(#version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNorm;
-layout (location = 2) in vec2 aUV;
-layout (location = 3) in vec4 aColor;
-out vec3 pos;
-out vec3 normal;
-out vec2 uv;
-out vec4 vertexColor;
-uniform mat4 MVP;
-void main() {
-    pos = aPos;
-    normal = aNorm;
-    uv = aUV;
-    vertexColor = aColor;
-
-    gl_Position = MVP * vec4(aPos, 1.0);
-})###";
-
-const char* VertexColorShaderSource =
-R"###(#version 330 core
-uniform vec4 tint;
-in vec4 vertexColor;
-out vec4 FragColor;
-void main() {
-    FragColor = vertexColor;
-})###";
-
-const char* ColorShaderSource =
-R"###(#version 330 core
-uniform vec4 tint;
-out vec4 FragColor;
-void main() {
-    FragColor = tint;
-})###";
-
-const char* TextureShaderSource =
-R"###(#version 330 core
-uniform vec4 tint;
-uniform sampler2D tex;
-in vec2 uv;
-out vec4 FragColor;
-void main() {
-    vec4 color = texture(tex, uv);
-    FragColor = color;
-})###";
-
-const char* ErrorFragmentShaderSource =
-R"###(#version 330 core
-out vec4 FragColor;
-void main() {
-    FragColor = vec4(1, 0, 1, 1);
-})###";
-
-
-const char* ScreenSpaceVertexSource = 
-R"###(#version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec2 aUV;
-layout (location = 2) in vec4 aColor;
-
-out vec2 uv;
-out vec4 vertexColor;
-
-vec3 ScreenToClip(vec3 pos) {
-    vec2 p = pos.xy / vec2(800, 600);
-    p = p * 2 - 1;
-    p.y *= -1;
-
-    return vec3(p.x, p.y, 0);
-}
-
-void main() {
-    uv = aUV;
-    vertexColor = aColor;
-
-    gl_Position = vec4(ScreenToClip(aPos), 1);
-})###";
-
-
-const char* ScreenSpaceFragmentSource = 
-R"###(#version 330 core
-in vec2 uv;
-in vec4 vertexColor;
-
-uniform sampler2D tex;
-
-out vec4 FragColor;
-
-void main() {
-    vec4 col = texture(tex, uv);
-    FragColor = vertexColor * col;
-})###";
-
 SRWindow* InitializeWindow(char* name);
 bool ShouldClose(SRWindow* window);
 
@@ -420,7 +321,7 @@ void RenderBatch(SRWindow* window, Batch* batch);
 //=========================================
 
 GLFWwindow* CreateGLFWWindow(int width, int height, char* tittle);
-void InitalizeRenderer();
+void InitializeRenderer();
 
 //=========================================
 // GL state
@@ -467,7 +368,8 @@ void BindTexture(Texture texture);
 //========================================
 // Drawing
 //========================================
-void DrawMesh(Mesh mesh, Matrix transform);
+void DrawMesh(SRWindow* window, Mesh mesh, Matrix transform);
+void DrawMesh(SRWindow* window, Mesh mesh, Camera camera, Matrix transform);
 
 //========================================
 // Screen Space drawing
@@ -480,8 +382,8 @@ void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect de
 //========================================
 // Camera
 //========================================
-Camera CreateOrtographic(float ortographicSize, float nearPlane, float farPlane, int widthAspect, int heightAspect);
-Camera CreatePerspective(float fov, float nearPlane, float farPlane, int widthAspect, int heightAspect);
+Camera CreateOrtographic(float ortographicSize, float nearPlane, float farPlane, float aspect);
+Camera CreatePerspective(float fov, float nearPlane, float farPlane, float aspect);
 
 Matrix GetView(Camera *cam);
 Matrix GetProjection(Camera *cam);

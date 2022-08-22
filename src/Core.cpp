@@ -1,10 +1,11 @@
 #include "SimpleRenderer.h"
+#include "Memory.h"
 
+#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui.h"
 
 SRWindow windowInstance = {};
-
-bool KeyboardState[MAX_KEY_COUNT];
 
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void ResizeCallback(GLFWwindow* window, int width, int height);

@@ -1,18 +1,25 @@
 #ifdef UNITY_BUILD
 #include "unity.cpp"
+#else
+#include "SimpleRenderer.h"
 #endif
+
+#include <stdio.h>
 
 int main()
 {
-    SRWindow* window = InitializeWindow("Window");
+    SRWindow* window = InitializeWindow((char*) "Window");
 
     Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag", &window->tempArena);
     UseShader(window, shader);
 
-    Texture texture = LoadTextureAtPath("av.png", &window->tempArena);
+    Texture texture = LoadTextureAtPath((char*) "av.png", &window->tempArena);
     BindTexture(texture);
 
     Mesh cube = CreateCubeMesh();
+
+    Slice<Vector3> s = AllocateSlice<Vector3>(4);
+    printf("%f", s[0].z);
 
     FaceCulling(window, true);
     DepthTest(window, true);
