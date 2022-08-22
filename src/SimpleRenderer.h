@@ -262,9 +262,18 @@ struct Batch {
     uint32_t VBO;
 };
 
+enum RenderState {
+    Uninitialized,
+    Frame,
+    ScreenSpace,
+    FrameEnded
+};
+
 struct SRWindow {
     GLFWwindow* glfwWin;
     MemoryArena tempArena;
+
+    RenderState state;
 
     // @Note: it is size of the framebuffer.
     // If you want the window size call glfwGetWindowFrameSize()
@@ -298,6 +307,9 @@ bool ShouldClose(SRWindow* window);
 
 void FrameStart(SRWindow* window);
 void FrameEnd(SRWindow* window);
+
+void BeginScreenSpace(SRWindow* window);
+void EndScreenSpace(SRWindow* window);
 
 //========================================
 // Input

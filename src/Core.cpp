@@ -52,6 +52,10 @@ bool ShouldClose(SRWindow* window) {
 }
 
 void FrameStart(SRWindow* window) {
+    // @TODO: assert message
+    assert(window->state == Uninitialized || window->state == FrameEnded);
+    window->state = Frame;
+
     window->timeSinceStart    = glfwGetTime();
     window->timeDelta         = (float)(window->timeSinceStart - window->previousFrameTime);
     window->previousFrameTime = window->timeSinceStart;
@@ -91,6 +95,9 @@ void FrameStart(SRWindow* window) {
 }
 
 void FrameEnd(SRWindow* window) {
+    assert(window->state == Frame);
+    window->state = FrameEnded;
+
     RenderBatch(window, &window->screenSpaceBatch);
 
     ImGui::Render();
@@ -102,6 +109,23 @@ void FrameEnd(SRWindow* window) {
 
     window->resizedThisFrame = false;
 }
+
+
+void BeginScreenSpace(SRWindow* window) {
+    assert(window->state == Frame);
+    window->state = ScreenSpace;
+
+    SetUniformInt(ScreenSpaceShader, "framebufferWidth", window->width);
+    SetUniformInt(ScreenSpaceShader, "framebufferHeight", window->height);
+}
+
+void EndScreenSpace(SRWindow* window) {
+    assert(window->state == ScreenSpace);
+    window->state = Frame;
+
+    RenderBatch(window, &window->screenSpaceBatch);
+}
+
 
 void ResizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);

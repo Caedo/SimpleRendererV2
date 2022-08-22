@@ -18,9 +18,6 @@ int main()
 
     Mesh cube = CreateCubeMesh();
 
-    Slice<Vector3> s = AllocateSlice<Vector3>(4);
-    printf("%f", s[0].z);
-
     FaceCulling(window, true);
     DepthTest(window, true);
 
@@ -55,12 +52,16 @@ int main()
         DrawMesh(window, cube, camera, MatrixTranslate(0, 2, 0));
         DrawMesh(window, cube, camera, MatrixTranslate(0, 4, 0));
 
+        BeginScreenSpace(window);
+
         DrawRect(window, {0, 0, 50, 80}, {1, 0, 0, 1});
         DrawRect(window, {55, 0, 50, 80}, {0, 1, 0, 1});
         DrawRect(window, {110, 0, 50, 80}, {0, 0, 0, 1});
         DrawRect(window, {165, 0, 50, 80}, {0, 1, 1, 1});
         DrawTexture(window, texture, {220, 0}, {0, 0});
         DrawTextureFragment(window, texture, {0, 0, 0.5, 0.5}, {450, 0, 50, 80});
+
+        EndScreenSpace(window);
 
         FrameEnd(window);
     }

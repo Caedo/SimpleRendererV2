@@ -81,11 +81,14 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aUV;
 layout (location = 2) in vec4 aColor;
 
+uniform int framebufferWidth;
+uniform int framebufferHeight;
+
 out vec2 uv;
 out vec4 vertexColor;
 
 vec3 ScreenToClip(vec3 pos) {
-    vec2 p = pos.xy / vec2(800, 600);
+    vec2 p = pos.xy / vec2(framebufferWidth, framebufferHeight);
     p = p * 2 - 1;
     p.y *= -1;
 
@@ -302,6 +305,19 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath, Memo
     }
 
     return LoadShaderSource(vertexSource, fragmentSource);
+}
+
+void SetUniformInt(Shader shader, char *name, int value) {
+    glUseProgram(shader.id);
+    int loc = glGetUniformLocation(shader.id, name);
+    if (loc != -1)
+    {
+        glUniform1i(loc, value);
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform Float: %s\n", name);
+    }
 }
 
 void SetUniformFloat(Shader shader, char *name, float value) {
@@ -896,6 +912,8 @@ void RenderBatch(SRWindow* window, Batch* batch) {
 // Screen Space drawing
 //========================================
 void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
+    assert(window->state == ScreenSpace);
+
     Batch* batch = &window->screenSpaceBatch;
     if(batch->usedTextureId != batch->whiteTextureId) {
         RenderBatch(window, &window->screenSpaceBatch);
@@ -921,6 +939,8 @@ void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
 }
 
 void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin) {
+    assert(window->state == ScreenSpace);
+
     if(window->screenSpaceBatch.usedTextureId != texture.id) {
         RenderBatch(window, &window->screenSpaceBatch);
     }
@@ -945,6 +965,8 @@ void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 or
 }
 
 void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination){
+    assert(window->state == ScreenSpace);
+
     if(window->screenSpaceBatch.usedTextureId != texture.id) {
         RenderBatch(window, &window->screenSpaceBatch);
     }
