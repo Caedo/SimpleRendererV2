@@ -8,7 +8,7 @@
 
 int main()
 {
-    SRWindow* window = InitializeWindow((char*) "Window");
+    SRWindow* window = InitializeWindow(Str8Lit("Simple Renderer"));
 
     Shader shader = LoadShaderFromFile("shaders/testVert.vert", "shaders/testFrag.frag", &window->tempArena);
     UseShader(window, shader);

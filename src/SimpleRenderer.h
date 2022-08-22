@@ -11,6 +11,11 @@
 
 #include "raymath.h"
 
+struct Str8 {
+    char* str;
+    uint64_t length;
+};
+
 enum class CameraType
 {
     Perspective,
@@ -302,7 +307,7 @@ struct SRWindow {
     bool resizedThisFrame;
 };
 
-SRWindow* InitializeWindow(char* name);
+SRWindow* InitializeWindow(Str8 name);
 bool ShouldClose(SRWindow* window);
 
 void FrameStart(SRWindow* window);
@@ -329,19 +334,16 @@ void AddBatchVertices(SRWindow* window, Batch*, Slice<BatchVertex> vertices);
 void RenderBatch(SRWindow* window, Batch* batch);
 
 //=========================================
-// Initialization
-//=========================================
-
-GLFWwindow* CreateGLFWWindow(int width, int height, char* tittle);
-void InitializeRenderer();
-
-//=========================================
 // GL state
 //=========================================
 
 void FaceCulling(SRWindow* window, bool enabled);
 void DepthTest(SRWindow* window, bool enabled);
 void UseShader(SRWindow* window, Shader shader);
+
+void ClearColorBuffer(Vector4 color);
+void ClearDepthBuffer();
+void ClearColorAndDepthBuffer(Vector4 color);
 
 //=========================================
 // Shaders
@@ -404,5 +406,10 @@ Matrix GetVPMatrix(Camera *cam);
 
 Vector3 GetCameraForward(Camera* cam);
 Vector3 GetCameraRight(Camera* cam);
+
+//======================================
+// Strings
+//======================================
+#define Str8Lit(c) Str8{(c), sizeof(c)}
 
 #endif

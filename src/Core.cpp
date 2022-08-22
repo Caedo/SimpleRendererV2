@@ -10,21 +10,55 @@ SRWindow windowInstance = {};
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void ResizeCallback(GLFWwindow* window, int width, int height);
 
-SRWindow* InitializeWindow(char* name) {
+SRWindow* InitializeWindow(Str8 name) {
     // @TODO: expose width and height to use code
     windowInstance.width = 800;
     windowInstance.height = 600;
 
-    windowInstance.glfwWin = CreateGLFWWindow(800, 600, name);
-    InitializeRenderer();
+    // GLFW Init
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    InitBatch(&windowInstance.screenSpaceBatch);
+    windowInstance.glfwWin = glfwCreateWindow(800, 600, name.str, NULL, NULL);
+    if (windowInstance.glfwWin == NULL)
+    {
+        printf("Failed to Initialie GLFW Window!!! \n");
+        glfwTerminate();
+        return NULL;
+    }
 
-    windowInstance.tempArena = CreateArena();
+    glfwMakeContextCurrent(windowInstance.glfwWin);
 
     glfwSetKeyCallback(windowInstance.glfwWin, KeyCallback);
     glfwSetFramebufferSizeCallback(windowInstance.glfwWin, ResizeCallback);
 
+    windowInstance.tempArena = CreateArena();
+
+    // GL Init
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        printf("Failed to Initialie GLAD!!! \n");
+        glfwTerminate();
+        return NULL;
+    }
+
+    glfwSwapInterval(1);
+
+    ErrorShader = LoadShaderSource(DefaultVertexShaderSource, ErrorFragmentShaderSource);
+    ColorShader = LoadShaderSource(DefaultVertexShaderSource, ColorShaderSource);
+    TextureShader = LoadShaderSource(DefaultVertexShaderSource, TextureShaderSource);
+    VertexColorShader = LoadShaderSource(DefaultVertexShaderSource, VertexColorShaderSource);
+    ScreenSpaceShader = LoadShaderSource(ScreenSpaceVertexSource, ScreenSpaceFragmentSource);
+
+    assert(ErrorShader.isValid);
+    assert(ColorShader.isValid);
+    assert(TextureShader.isValid);
+    assert(VertexColorShader.isValid);
+    assert(ScreenSpaceShader.isValid);
+
+    InitBatch(&windowInstance.screenSpaceBatch);
     UseShader(&windowInstance, ErrorShader);
 
     // Setup Dear ImGui context
@@ -37,12 +71,10 @@ SRWindow* InitializeWindow(char* name) {
     
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
     
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(windowInstance.glfwWin, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
-
 
     return &windowInstance;
 }

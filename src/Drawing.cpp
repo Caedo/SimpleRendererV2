@@ -119,52 +119,6 @@ void main() {
 
 
 //=========================================
-// Initialization
-//=========================================
-
-GLFWwindow* CreateGLFWWindow(int width, int height, char* tittle) {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow *window = glfwCreateWindow(800, 600, tittle, NULL, NULL);
-    if (window == NULL)
-    {
-        printf("Failed to Initialie GLFW Window!!! \n");
-        glfwTerminate();
-        return NULL;
-    }
-
-    glfwMakeContextCurrent(window);
-
-    return window;
-}
-
-void InitializeRenderer() {
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        printf("Failed to Initialie GLAD!!! \n");
-        glfwTerminate();
-        return;
-    }
-
-    glfwSwapInterval(1);
-
-    ErrorShader = LoadShaderSource(DefaultVertexShaderSource, ErrorFragmentShaderSource);
-    ColorShader = LoadShaderSource(DefaultVertexShaderSource, ColorShaderSource);
-    TextureShader = LoadShaderSource(DefaultVertexShaderSource, TextureShaderSource);
-    VertexColorShader = LoadShaderSource(DefaultVertexShaderSource, VertexColorShaderSource);
-    ScreenSpaceShader = LoadShaderSource(ScreenSpaceVertexSource, ScreenSpaceFragmentSource);
-
-    assert(ErrorShader.isValid);
-    assert(ColorShader.isValid);
-    assert(TextureShader.isValid);
-    assert(VertexColorShader.isValid);
-    assert(ScreenSpaceShader.isValid);
-}
-
-//=========================================
 // GL state
 //=========================================
 
