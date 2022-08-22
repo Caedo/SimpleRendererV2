@@ -32,6 +32,8 @@ int main()
     while (ShouldClose(window) == false)
     {
         FrameStart(window);
+
+        ClearColorAndDepthBuffer({0.5, 0.5, 0.5, 1});
  
         if(window->leftMouseBtnPressed) {
             camera.rotation.y += window->mouseDelta.x;

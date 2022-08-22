@@ -116,10 +116,6 @@ void FrameStart(SRWindow* window) {
 
     memcpy(window->input.previousKeys, window->input.currentKeys, sizeof(window->input.previousKeys));
 
-    // @TODO: move to Graphics function
-    glClearColor(0.6f, 0.6f, 0.6f, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
