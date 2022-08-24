@@ -369,3 +369,167 @@ Vector3 GetCameraRight(Camera* cam) {
     Vector3 forward = GetCameraForward(cam);
     return Vector3Normalize(Vector3CrossProduct(cam->worldUp, forward));
 }
+
+
+//======================================
+// Strings, text and fonts
+//======================================
+
+Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
+    Font font = {};
+
+    stbtt_fontinfo fontInfo = {};
+
+    if(stbtt_InitFont(&fontInfo, data, 0)) {
+        float scaleFactor = stbtt_ScaleForPixelHeight(&fontInfo, (float) fontSize);
+
+        // int ascent, descent, lineGap;
+        // stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
+
+        stbtt_packedchar packedGlyphs[CharacterRange];
+        // stbtt_pack_range range = {(float) fontSize, 32, NULL, CharacterRange, packedGlyphs, 0, 0};
+
+        font.size = fontSize;
+        
+        struct C {
+            uint8_t r;
+            uint8_t g;
+            uint8_t b;
+            uint8_t a;
+        };
+
+        int width = 1024;
+        int max_height = 1024;
+        unsigned char *bitmap = (unsigned char*)malloc(max_height * width);
+        C* colorBitmap = (C*)malloc(sizeof(C) * max_height * width);
+
+        stbtt_pack_context packContext;
+        stbtt_PackBegin(&packContext, bitmap, width, max_height, 0, 1, NULL);
+        stbtt_PackSetOversampling(&packContext, 3, 1);
+        stbtt_PackFontRange(&packContext, data, 0, (float) fontSize, 32, CharacterRange, packedGlyphs);
+        stbtt_PackEnd(&packContext);
+
+        for(int i = 0; i < max_height * width; i++) {
+            colorBitmap[i].r = 255;
+            colorBitmap[i].g = 255;
+            colorBitmap[i].b = 255;
+            colorBitmap[i].a = bitmap[i];
+        }
+
+        font.atlas.channels = 4;
+        font.atlas.width = width;
+        font.atlas.height = max_height;
+
+        glGenTextures(1, &font.atlas.id);
+        glBindTexture(GL_TEXTURE_2D, font.atlas.id);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, max_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, colorBitmap);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        for(int i = 0; i < CharacterRange - 32; i++) {
+            stbtt_packedchar m = packedGlyphs[i];
+
+            float unusedX = 0.0f, unusedY = 0.0f;
+            stbtt_aligned_quad quad;
+            stbtt_GetPackedQuad(packedGlyphs, width, max_height, i, &unusedX, &unusedY, &quad, 0);
+
+            font.glyphData[i].atlasRect.x = quad.s0;
+            font.glyphData[i].atlasRect.y = quad.t0;
+            font.glyphData[i].atlasRect.width = quad.s1 - quad.s0;
+            font.glyphData[i].atlasRect.height = quad.t1 - quad.t0;
+
+            font.glyphData[i].pixelWidth = (quad.x1 - quad.x0);
+            font.glyphData[i].pixelHeight = (quad.y1 - quad.y0);
+            
+            font.glyphData[i].xOffset = quad.x0;
+            font.glyphData[i].yOffset = quad.y0;
+
+            font.glyphData[i].advanceX = (int) packedGlyphs[i].xadvance;
+        }
+
+        free(colorBitmap);
+        free(bitmap);
+    }
+
+    return font;
+}
+
+Font LoadFontAtPath(Str8 path, int fontSize, MemoryArena* arena) {
+    FILE* file;
+    errno_t err = fopen_s(&file, path.str, "rb");
+    if(err != 0) {
+        return Font{};
+    }
+
+    // TODO: ReadEntireFile
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char* fileData = (char *)PushArena(arena, length);
+    fread(fileData, 1, length, file);
+    fclose(file);
+
+    return LoadFontFromMemory((const unsigned char*)fileData, fontSize);
+}
+
+int GetCodepoint(Str8 text, int* advance) {
+    char first = text[0];
+    if((first & 0x80) == 0) {
+        *advance = 1;
+        return first;
+    }
+    else if((first & 0xe0) == 0xc0) {
+        *advance = 2;
+
+        if((text[1] & 0xc0) != 0x80) {
+            // invalid codepoint
+            return '?';
+        }
+
+        return ((text[0] & 0x1f) << 6) | (text[1] & 0x3f); 
+    }
+    else if((first & 0xf0) == 0xe0) {
+        *advance = 3;
+    
+        if((text[1] & 0xc0) != 0x80 ||
+           (text[2] & 0xc0) != 0x80) 
+        {
+            // invalid codepoint
+            return '?';
+        }
+
+        return ((text[0] & 0x0f) << 12) | ((text[1] & 0x3f) << 6) | (text[2] & 0x3f);
+    }
+    else if((first & 0xf8) == 0xf0) {
+        *advance = 4;
+
+        if((text[1] & 0xc0) != 0x80 ||
+           (text[2] & 0xc0) != 0x80 ||
+           (text[3] & 0xc0) != 0x80) 
+        {
+            // invalid codepoint
+            return '?';
+        }
+
+        return ((text[0] & 0x07) << 18) | ((text[1] & 0x3f) << 12) | ((text[2] & 0x3f) << 6) | (text[3] & 0x3f);
+    }
+
+    *advance = 1;
+    return '?';
+}
+
+int GetGlyphIndex(Str8 text, int* advance) {
+    int codepoint = GetCodepoint(text, advance) - 32;
+
+    if(codepoint >= CharacterRange - 32) {
+        codepoint = '?' - 32;
+    }
+
+    return codepoint;
+}

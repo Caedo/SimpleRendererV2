@@ -964,3 +964,35 @@ void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect de
     AddBatchVertices(window, &window->screenSpaceBatch, MakeSlice(vertices, 0, 6));
 }
 
+//=============================
+// Text
+//=============================
+
+void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position) {
+    float startPositionX = position.x;
+
+    for(int i = 0; i < text.length;) {
+        if(text.str[i] == '\n') {
+            position.y += font.size;
+            position.x = startPositionX;
+            i += 1;
+            continue; 
+        }
+
+        int advance = 0;
+        Str8 subStr = {text.str + i, text.length - i};
+        int glyphIndex = GetGlyphIndex(subStr, &advance);
+        i += advance;
+
+        GlyphData glyph = font.glyphData[glyphIndex];
+        Rect dest = {
+            position.x + glyph.xOffset,
+            position.y + glyph.yOffset,
+            (float) glyph.pixelWidth,
+            (float) glyph.pixelHeight
+        };
+
+        DrawTextureFragment(window, font.atlas, glyph.atlasRect, dest);
+        position.x += glyph.advanceX;
+    }
+}

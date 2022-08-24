@@ -11,11 +11,6 @@
 
 #include "raymath.h"
 
-struct Str8 {
-    char* str;
-    uint64_t length;
-};
-
 enum class CameraType
 {
     Perspective,
@@ -263,6 +258,8 @@ struct Batch {
     uint32_t whiteTextureId;
     uint32_t usedTextureId;
 
+    uint32_t shaderId;
+
     uint32_t VAO;
     uint32_t VBO;
 };
@@ -307,6 +304,41 @@ struct SRWindow {
     bool resizedThisFrame;
 };
 
+// Text and fonts
+struct Str8 {
+    char* str;
+    uint64_t length;
+
+    char operator[] (int index) {
+        assert(index < length && index >= 0);
+        return str[index];
+    }
+};
+
+#define CharacterRange 383 // @TODO: dynamic range 
+struct GlyphData {
+    int codepoint;
+
+    float pixelWidth;
+    float pixelHeight;
+
+    Rect atlasRect;
+
+    float xOffset;
+    float yOffset;
+
+    int advanceX;
+};
+
+struct Font {
+    int size;
+
+    Texture atlas;
+    GlyphData glyphData[CharacterRange - 32];
+};
+
+//========================================
+
 SRWindow* InitializeWindow(Str8 name);
 bool ShouldClose(SRWindow* window);
 
@@ -318,7 +350,7 @@ void EndScreenSpace(SRWindow* window);
 
 //========================================
 // Input
-// =======================================
+//========================================
 KeyState GetKeyState(SRWindow* window, Key key);
 bool IsKeyDown(SRWindow* window, Key key);
 bool IsKeyUp(SRWindow* window, Key key);
@@ -408,8 +440,16 @@ Vector3 GetCameraForward(Camera* cam);
 Vector3 GetCameraRight(Camera* cam);
 
 //======================================
-// Strings
+// Strings, text and fonts
 //======================================
-#define Str8Lit(c) Str8{(c), sizeof(c)}
+#define Str8Lit(c) Str8{(c), sizeof(c) - 1}
+
+Font LoadFontFromMemory(const unsigned char* data, int fontSize);
+Font LoadFontAtPath(Str8 path, int fontSize, MemoryArena* arena);
+
+int GetCodepoint(Str8 text, int* advance);
+int GetGlyphIndex(Str8 text, int* advance);
+
+void DrawText(SRWindow* window, Str8 text, Font font, Vector2 position);
 
 #endif
