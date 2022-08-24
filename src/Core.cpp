@@ -377,20 +377,38 @@ Vector3 GetCameraRight(Camera* cam) {
 
 Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
     Font font = {};
-
     stbtt_fontinfo fontInfo = {};
+
+    const int oversampleX = 3;
+    const int oversampleY = 1;
+    const int padding = 1;
 
     if(stbtt_InitFont(&fontInfo, data, 0)) {
         float scaleFactor = stbtt_ScaleForPixelHeight(&fontInfo, (float) fontSize);
 
-        // int ascent, descent, lineGap;
-        // stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
+        int surface = 0;
 
-        stbtt_packedchar packedGlyphs[CharacterRange];
-        // stbtt_pack_range range = {(float) fontSize, 32, NULL, CharacterRange, packedGlyphs, 0, 0};
+        for(int i = 32; i < CharacterRange; i++) {
+            int x0, y0, x1, y1;
 
-        font.size = fontSize;
-        
+            stbtt_GetCodepointBitmapBoxSubpixel(
+                &fontInfo, 
+                i, 
+                oversampleX * scaleFactor, 
+                oversampleY * scaleFactor, 
+                0, 0,
+                &x0, &y0, &x1, &y1
+            );
+
+            int w = x1 - x0 + padding + oversampleX - 1;
+            int h = y1 - y0 + padding + oversampleY - 1;
+
+            surface += w * h;
+        }
+
+        int sqrtSurf = ((int) sqrtf((float) surface)) + 1;
+        int bitmapSize = ImUpperPowerOfTwo(sqrtSurf);
+
         struct C {
             uint8_t r;
             uint8_t g;
@@ -398,27 +416,28 @@ Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
             uint8_t a;
         };
 
-        int width = 1024;
-        int max_height = 1024;
-        unsigned char *bitmap = (unsigned char*)malloc(max_height * width);
-        C* colorBitmap = (C*)malloc(sizeof(C) * max_height * width);
+        unsigned char *bitmap = (unsigned char*)malloc(bitmapSize * bitmapSize);
+        C* colorBitmap = (C*)malloc(sizeof(C) * bitmapSize * bitmapSize);
 
         stbtt_pack_context packContext;
-        stbtt_PackBegin(&packContext, bitmap, width, max_height, 0, 1, NULL);
+        stbtt_packedchar packedGlyphs[CharacterRange];
+
+        stbtt_PackBegin(&packContext, bitmap, bitmapSize, bitmapSize, 0, padding, NULL);
         stbtt_PackSetOversampling(&packContext, 3, 1);
         stbtt_PackFontRange(&packContext, data, 0, (float) fontSize, 32, CharacterRange, packedGlyphs);
         stbtt_PackEnd(&packContext);
 
-        for(int i = 0; i < max_height * width; i++) {
+        for(int i = 0; i < bitmapSize * bitmapSize; i++) {
             colorBitmap[i].r = 255;
             colorBitmap[i].g = 255;
             colorBitmap[i].b = 255;
             colorBitmap[i].a = bitmap[i];
         }
 
+        font.size = fontSize;
         font.atlas.channels = 4;
-        font.atlas.width = width;
-        font.atlas.height = max_height;
+        font.atlas.width = bitmapSize;
+        font.atlas.height = bitmapSize;
 
         glGenTextures(1, &font.atlas.id);
         glBindTexture(GL_TEXTURE_2D, font.atlas.id);
@@ -428,7 +447,7 @@ Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, max_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, colorBitmap);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmapSize, bitmapSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, colorBitmap);
         glBindTexture(GL_TEXTURE_2D, 0);
 
         for(int i = 0; i < CharacterRange - 32; i++) {
@@ -436,7 +455,7 @@ Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
 
             float unusedX = 0.0f, unusedY = 0.0f;
             stbtt_aligned_quad quad;
-            stbtt_GetPackedQuad(packedGlyphs, width, max_height, i, &unusedX, &unusedY, &quad, 0);
+            stbtt_GetPackedQuad(packedGlyphs, bitmapSize, bitmapSize, i, &unusedX, &unusedY, &quad, 0);
 
             font.glyphData[i].atlasRect.x = quad.s0;
             font.glyphData[i].atlasRect.y = quad.t0;
