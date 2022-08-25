@@ -3,7 +3,7 @@
 #endif
 
 int main() {
-    SRWindow window = InitializeWindow("Hello Triangle");
+    SRWindow* window = InitializeWindow(Str8Lit("Hello Triangle"));
 
     Mesh mesh = {0};
     Vector3 verts[] = {
@@ -31,12 +31,14 @@ int main() {
         0, 0, 0, 1
     };
 
-    while(ShouldClose(&window) == false) {
-        FrameStart(&window);
+    UseShader(window, VertexColorShader);
 
-        DrawMesh(mesh, identityMatrix, VertexColorShader);
+    while(ShouldClose(window) == false) {
+        FrameStart(window);
 
-        FrameEnd(&window);
+        DrawMesh(window, mesh, identityMatrix);
+
+        FrameEnd(window);
     }
     
     return 0;
