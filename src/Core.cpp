@@ -542,3 +542,29 @@ int GetGlyphIndex(Str8 text, int* advance) {
 
     return codepoint;
 }
+
+int MeasureStringWidth(Str8 text, Font font) {
+    int width = 0;
+    int currentWidth = 0;
+
+    for(int i = 0; i < text.length;) {
+        if(text.str[i] == '\n') {
+            width = max(width, currentWidth);
+            currentWidth = 0;
+
+            i += 1;
+            continue; 
+        }
+
+        int advance = 0;
+        Str8 subStr = {text.str + i, text.length - i};
+        int glyphIndex = GetGlyphIndex(subStr, &advance);
+        i += advance;
+
+        GlyphData glyph = font.glyphData[glyphIndex];
+        currentWidth += glyph.advanceX;
+    }
+
+    width = max(width, currentWidth);
+    return width;
+}

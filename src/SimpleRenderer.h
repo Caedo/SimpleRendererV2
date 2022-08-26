@@ -461,6 +461,7 @@ Font LoadFontAtPath(Str8 path, int fontSize, MemoryArena* arena);
 int GetCodepoint(Str8 text, int* advance);
 int GetGlyphIndex(Str8 text, int* advance);
 
-void DrawText(SRWindow* window, Str8 text, Font font, Vector2 position);
+void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position);
+int MeasureStringWidth(Str8 text, Font font);
 
 #endif
