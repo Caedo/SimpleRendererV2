@@ -41,7 +41,6 @@ void main() {
 
 const char* VertexColorShaderSource =
 R"###(#version 330 core
-uniform vec4 tint;
 in vec4 vertexColor;
 out vec4 FragColor;
 void main() {
@@ -322,82 +321,6 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath, Memo
     }
 
     return LoadShaderSource(vertexSource, fragmentSource);
-}
-
-void SetUniformInt(Shader shader, char *name, int value) {
-    glUseProgram(shader.id);
-    int loc = glGetUniformLocation(shader.id, name);
-    if (loc != -1)
-    {
-        glUniform1i(loc, value);
-    }
-    else {
-        // @TODO: logger
-        // printf("Couldn't find uniform Float: %s\n", name);
-    }
-}
-
-void SetUniformFloat(Shader shader, char *name, float value) {
-    glUseProgram(shader.id);
-    int loc = glGetUniformLocation(shader.id, name);
-    if (loc != -1)
-    {
-        glUniform1f(loc, value);
-    }
-    else {
-        // @TODO: logger
-        // printf("Couldn't find uniform Float: %s\n", name);
-    }
-}
-
-void SetUniformVec2(Shader shader, char *name, Vector2 value) {
-    glUseProgram(shader.id);
-    int loc = glGetUniformLocation(shader.id, name);
-    if(loc != -1) {
-        glUniform2f(loc, value.x, value.y);
-    }
-    else {
-        // @TODO: logger
-        // printf("Couldn't find uniform Vec2: %s\n", name);
-    }
-}
-
-void SetUniformVec3(Shader shader, char *name, Vector3 value){
-    glUseProgram(shader.id);
-    int loc = glGetUniformLocation(shader.id, name);
-    if (loc != -1) {
-        glUniform3f(loc, value.x, value.y, value.z);
-    }
-    else {
-        // @TODO: logger
-        // printf("Couldn't find uniform Vec3: %s\n", name);
-    }
-}
-
-void SetUniformColor(Shader shader, char *name, Vector4 value) {
-    glUseProgram(shader.id);
-    int loc = glGetUniformLocation(shader.id, name);
-    if (loc != -1) {
-        // glUniform4f(loc, value.x, value.y, value.z, value.w);
-        glUniform4fv(loc, 1, (const float *)(&value));
-    }
-    else {
-        // @TODO: logger
-        // printf("Couldn't find uniform color: %s\n", name);
-    }
-}
-
-void SetUniformMatrix(Shader shader, char* name, Matrix value) {
-    glUseProgram(shader.id);
-    int loc = glGetUniformLocation(shader.id, name);
-    if (loc != -1) {
-        // glUniform4f(loc, value.x, value.y, value.z, value.w);
-        glUniformMatrix4fv(loc, 1, false, (const float *)(&value));
-    }
-    else {
-        // @TODO: logger
-        // printf("Couldn't find uniform color: %s\n", name);
-    }
 }
 
 //=========================================
@@ -906,8 +829,8 @@ void RenderBatch(SRWindow* window, Batch* batch) {
         ScreenSpaceShader// shder
     );
 
-    SetUniformInt(ScreenSpaceShader, "framebufferWidth", window->width);
-    SetUniformInt(ScreenSpaceShader, "framebufferHeight", window->height);
+    glUniform1i(glGetUniformLocation(ScreenSpaceShader.id, "framebufferWidth"), window->width);
+    glUniform1i(glGetUniformLocation(ScreenSpaceShader.id, "framebufferHeight"), window->height);
 
     glBindTexture(GL_TEXTURE_2D, batch->usedTextureId);
 
