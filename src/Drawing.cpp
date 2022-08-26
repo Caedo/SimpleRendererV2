@@ -122,8 +122,41 @@ void main() {
 // GL state
 //=========================================
 
+
+void PushGLState(SRWindow* window, bool faceCulling, bool depthTest, bool blending, Shader shader) {
+    window->glStateIndex += 1;
+
+    FaceCulling(window, faceCulling);
+    DepthTest(window, depthTest);
+    Blending(window, blending);
+    UseShader(window, shader);
+}
+
+void SetGLState(SRWindow* window, GLState glState) {
+    FaceCulling(window, glState.faceCulling);
+    DepthTest(window,   glState.depthTest);
+    Blending(window,    glState.blending);
+    UseShader(window,   glState.shader);
+}
+
+GLState PopGLState(SRWindow* window) {
+    assert(window->glStateIndex > 0);
+
+    int idx = window->glStateIndex;
+    GLState ret = window->glStateStack[idx];
+
+    window->glStateIndex = idx - 1;
+    GLState* glState = &window->glStateStack[idx-1];
+
+    FaceCulling(window, glState->faceCulling);
+    DepthTest(window,   glState->depthTest);
+    Blending(window,    glState->blending);
+    UseShader(window,   glState->shader);
+
+    return ret;
+}
+
 void FaceCulling(SRWindow* window, bool enabled) {
-    window->faceCulling = enabled;
     if(enabled) {
         glEnable(GL_CULL_FACE);
 
@@ -133,23 +166,39 @@ void FaceCulling(SRWindow* window, bool enabled) {
     else {
         glDisable(GL_CULL_FACE);
     }
+
+    window->glStateStack[window->glStateIndex].faceCulling = enabled;
 }
 
 void DepthTest(SRWindow* window, bool enabled) {
-    window->depthTest = enabled;
-
     if(enabled) {
         glEnable(GL_DEPTH_TEST);
     }
     else {
         glDisable(GL_DEPTH_TEST);
     }
+
+    window->glStateStack[window->glStateIndex].depthTest = enabled;
+}
+
+void Blending(SRWindow* window, bool enabled) {
+    // @TODO: other function
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    if(enabled){
+        glEnable(GL_BLEND);
+    }
+    else {
+        glDisable(GL_BLEND);
+    }
+
+    window->glStateStack[window->glStateIndex].blending = enabled;
 }
 
 void UseShader(SRWindow* window, Shader shader) {
     uint32_t id = shader.isValid ? shader.id : ErrorShader.id;
 
-    window->currentShaderId = id;
+    window->glStateStack[window->glStateIndex].shader = shader;
     glUseProgram(id);
 }
 
@@ -818,7 +867,8 @@ void BindTexture(Texture texture) {
 // }
 
 void DrawMesh(SRWindow* window, Mesh mesh, Matrix transform) {
-    uint32_t mvpLoc = glGetUniformLocation(window->currentShaderId, "MVP");
+    uint32_t shaderId = window->glStateStack[window->glStateIndex].shader.id;
+    uint32_t mvpLoc = glGetUniformLocation(shaderId, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&transform));
 
@@ -831,7 +881,8 @@ void DrawMesh(SRWindow* window, Mesh mesh, Camera camera, Matrix transform) {
     Matrix view = GetView(&camera);
     Matrix mvp = projection * view * transform;
 
-    uint32_t mvpLoc = glGetUniformLocation(window->currentShaderId, "MVP");
+    uint32_t shaderId = window->glStateStack[window->glStateIndex].shader.id;
+    uint32_t mvpLoc = glGetUniformLocation(shaderId, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
 
@@ -847,10 +898,16 @@ void RenderBatch(SRWindow* window, Batch* batch) {
         return;
     }
 
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
+    PushGLState(
+        window, 
+        false,            // face culling
+        false,           // depth test
+        true,            // blending
+        ScreenSpaceShader// shder
+    );
 
-    glUseProgram(ScreenSpaceShader.id);
+    SetUniformInt(ScreenSpaceShader, "framebufferWidth", window->width);
+    SetUniformInt(ScreenSpaceShader, "framebufferHeight", window->height);
 
     glBindTexture(GL_TEXTURE_2D, batch->usedTextureId);
 
@@ -863,31 +920,17 @@ void RenderBatch(SRWindow* window, Batch* batch) {
     batch->currentSize = 0;
     batch->usedTextureId = batch->whiteTextureId;
 
-    // Restore previous GL State
-    if(window->faceCulling) {
-        glEnable(GL_CULL_FACE);
-    }
-
-    if(window->depthTest) {
-        glEnable(GL_DEPTH_TEST);
-    }
-
-    glUseProgram(window->currentShaderId);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    PopGLState(window);
 }
 
 //========================================
 // Screen Space drawing
 //========================================
 void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
-    assert(window->state == ScreenSpace);
-
     Batch* batch = &window->screenSpaceBatch;
-    if(batch->usedTextureId != batch->whiteTextureId) {
-        RenderBatch(window, &window->screenSpaceBatch);
-    }
-
-    batch->usedTextureId = batch->whiteTextureId;
+    SetBatchTexture(window, batch, batch->whiteTextureId);
 
     float left  = rect.x;
     float right = rect.x + rect.width;
@@ -903,17 +946,12 @@ void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
     vertices[4] = {{right, bot, 0}, {1, 1}, color};
     vertices[5] = {{left,  bot, 0}, {0, 1}, color};
 
-    AddBatchVertices(window, &window->screenSpaceBatch, MakeSlice(vertices, 0, 6));
+    AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
 }
 
 void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin) {
-    assert(window->state == ScreenSpace);
-
-    if(window->screenSpaceBatch.usedTextureId != texture.id) {
-        RenderBatch(window, &window->screenSpaceBatch);
-    }
-
-    window->screenSpaceBatch.usedTextureId = texture.id;
+    Batch* batch = &window->screenSpaceBatch;
+    SetBatchTexture(window, batch, texture.id);
 
     float left  = position.x - texture.width * origin.x;
     float right = position.x + texture.width * (1 - origin.x);
@@ -929,17 +967,12 @@ void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 or
     vertices[4] = {{right, bot, 0}, {1, 1}, {1, 1, 1, 1}};
     vertices[5] = {{left,  bot, 0}, {0, 1}, {1, 1, 1, 1}};
 
-    AddBatchVertices(window, &window->screenSpaceBatch, MakeSlice(vertices, 0, 6));
+    AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
 }
 
 void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination){
-    assert(window->state == ScreenSpace);
-
-    if(window->screenSpaceBatch.usedTextureId != texture.id) {
-        RenderBatch(window, &window->screenSpaceBatch);
-    }
-
-    window->screenSpaceBatch.usedTextureId = texture.id;
+    Batch* batch = &window->screenSpaceBatch;
+    SetBatchTexture(window, batch, texture.id);
 
     float left  = destination.x;
     float right = destination.x + destination.width;
@@ -961,7 +994,7 @@ void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect de
     vertices[4] = {{right, bot, 0}, {uvRight, uvBot}, {1, 1, 1, 1}};
     vertices[5] = {{left,  bot, 0}, {uvLeft,  uvBot}, {1, 1, 1, 1}};
 
-    AddBatchVertices(window, &window->screenSpaceBatch, MakeSlice(vertices, 0, 6));
+    AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
 }
 
 //=============================

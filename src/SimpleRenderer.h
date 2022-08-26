@@ -267,8 +267,16 @@ struct Batch {
 enum RenderState {
     Uninitialized,
     Frame,
-    ScreenSpace,
     FrameEnded
+};
+
+#define GL_STACK_SIZE 16
+struct GLState {
+    Shader shader;
+
+    bool faceCulling;
+    bool depthTest;
+    bool blending;
 };
 
 struct SRWindow {
@@ -295,9 +303,8 @@ struct SRWindow {
 
     Input input;
 
-    uint32_t currentShaderId;
-    bool faceCulling;
-    bool depthTest;
+    int glStateIndex;
+    GLState glStateStack[GL_STACK_SIZE];
 
     Batch screenSpaceBatch;
 
@@ -345,9 +352,6 @@ bool ShouldClose(SRWindow* window);
 void FrameStart(SRWindow* window);
 void FrameEnd(SRWindow* window);
 
-void BeginScreenSpace(SRWindow* window);
-void EndScreenSpace(SRWindow* window);
-
 //========================================
 // Input
 //========================================
@@ -361,16 +365,24 @@ bool IsKeyUp(SRWindow* window, Key key);
 void InitBatch(Batch* batch);
 void AddBatchVertex(SRWindow* window, Batch* batch, Vector2 pos);
 void AddBatchVertex(SRWindow* window, Batch* batch, BatchVertex v);
-
 void AddBatchVertices(SRWindow* window, Batch*, Slice<BatchVertex> vertices);
+
+void SetBatchTexture(SRWindow* window, Batch* batch, uint32_t texture);
+
 void RenderBatch(SRWindow* window, Batch* batch);
 
 //=========================================
 // GL state
 //=========================================
 
+void PushGLState(SRWindow* window, bool faceCulling, bool depthTest, bool blending, Shader shader);
+void SetGLState(SRWindow* window, GLState glState);
+GLState PopGLState(SRWindow* window);
+
 void FaceCulling(SRWindow* window, bool enabled);
 void DepthTest(SRWindow* window, bool enabled);
+void Blending(SRWindow* window, bool enabled);
+
 void UseShader(SRWindow* window, Shader shader);
 
 void ClearColorBuffer(Vector4 color);
@@ -406,7 +418,6 @@ void CalculateNormals(Mesh* mesh);
 //========================================
 // Textures
 //========================================
-
 Texture LoadTextureAtPath(char* path, MemoryArena* arena);
 Texture LoadTextureFromMemory(Slice<char> mem);
 void BindTexture(Texture texture);

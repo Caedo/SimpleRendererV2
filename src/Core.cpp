@@ -138,23 +138,6 @@ void FrameEnd(SRWindow* window) {
     window->resizedThisFrame = false;
 }
 
-
-void BeginScreenSpace(SRWindow* window) {
-    assert(window->state == Frame);
-    window->state = ScreenSpace;
-
-    SetUniformInt(ScreenSpaceShader, "framebufferWidth", window->width);
-    SetUniformInt(ScreenSpaceShader, "framebufferHeight", window->height);
-}
-
-void EndScreenSpace(SRWindow* window) {
-    assert(window->state == ScreenSpace);
-    window->state = Frame;
-
-    RenderBatch(window, &window->screenSpaceBatch);
-}
-
-
 void ResizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 
@@ -278,6 +261,13 @@ void AddBatchVertices(SRWindow* window, Batch* batch, Slice<BatchVertex> vertice
     batch->currentSize = index;
 }
 
+void SetBatchTexture(SRWindow* window, Batch* batch, uint32_t textureId) {
+    if(batch->usedTextureId != textureId) {
+        RenderBatch(window, batch);
+    }
+
+    batch->usedTextureId = textureId;
+}
 
 //========================================
 // Camera
