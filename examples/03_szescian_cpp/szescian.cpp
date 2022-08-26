@@ -5,6 +5,7 @@
 
 int main() {
     SRWindow* window = InitializeWindow(Str8Lit("Szescian.cpp"));
+    Font font = LoadFontAtPath(Str8Lit("../common/Roboto-Regular.ttf"), 40, &window->tempArena);
 
     Mesh mesh = CreateCubeMesh();
     ApplyMesh(&mesh);
@@ -15,10 +16,7 @@ int main() {
     FaceCulling(window, true);
     DepthTest(window, true);
 
-    Texture tex = LoadTextureAtPath("av.png", &window->tempArena);
-    BindTexture(tex);
-
-    UseShader(window, TextureShader);
+    UseShader(window, VertexColorShader);
 
     Matrix cubeRotation = MatrixIdentity();
 

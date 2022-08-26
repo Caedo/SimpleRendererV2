@@ -12,5 +12,4 @@ del %exe_name%.exe
 start /b /wait "" "cl.exe" %compile_flags% ./%exe_name%.cpp /link %linker_flags% /libpath:%linker_path% /out:%exe_name%.exe
 copy ..\..\lib\* . >NUL
 
-%exe_name%.exe
-
+if NOT "%1" == "dontrun" ( %exe_name%.exe )
