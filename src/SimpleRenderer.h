@@ -488,7 +488,7 @@ void DrawMesh(SRWindow* window, Mesh mesh, Camera camera, Matrix transform);
 //========================================
 void DrawRect(SRWindow* window, Rect rect, Vector4 color);
 void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin);
-void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination);
+void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination, Vector4 color = {1, 1, 1, 1});
 
 //======================================
 // Materials
@@ -554,7 +554,7 @@ Font LoadFontAtPath(Str8 path, int fontSize, MemoryArena* arena);
 int GetCodepoint(Str8 text, int* advance);
 int GetGlyphIndex(Str8 text, int* advance);
 
-void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position);
+void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position, Vector4 color = {0, 0, 0, 1});
 int MeasureStringWidth(Str8 text, Font font);
 
 #endif

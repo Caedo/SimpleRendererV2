@@ -893,7 +893,7 @@ void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 or
     AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
 }
 
-void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination){
+void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination, Vector4 color) {
     Batch* batch = &window->screenSpaceBatch;
     SetBatchTexture(window, batch, texture.id);
 
@@ -909,13 +909,13 @@ void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect de
 
 
     BatchVertex vertices[6];
-    vertices[0] = {{left,  top, 0}, {uvLeft,  uvTop}, {1, 1, 1, 1}};
-    vertices[1] = {{right, top, 0}, {uvRight, uvTop}, {1, 1, 1, 1}};
-    vertices[2] = {{right, bot, 0}, {uvRight, uvBot}, {1, 1, 1, 1}};
+    vertices[0] = {{left,  top, 0}, {uvLeft,  uvTop}, color};
+    vertices[1] = {{right, top, 0}, {uvRight, uvTop}, color};
+    vertices[2] = {{right, bot, 0}, {uvRight, uvBot}, color};
 
-    vertices[3] = {{left,  top, 0}, {uvLeft,  uvTop}, {1, 1, 1, 1}};
-    vertices[4] = {{right, bot, 0}, {uvRight, uvBot}, {1, 1, 1, 1}};
-    vertices[5] = {{left,  bot, 0}, {uvLeft,  uvBot}, {1, 1, 1, 1}};
+    vertices[3] = {{left,  top, 0}, {uvLeft,  uvTop}, color};
+    vertices[4] = {{right, bot, 0}, {uvRight, uvBot}, color};
+    vertices[5] = {{left,  bot, 0}, {uvLeft,  uvBot}, color};
 
     AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
 }
@@ -1153,7 +1153,7 @@ Vector4 GetUniformValueBVec4(Material* material, Str8 name) {
 // Text
 //=============================
 
-void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position) {
+void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position, Vector4 color) {
     float startPositionX = position.x;
 
     for(int i = 0; i < text.length;) {
@@ -1177,7 +1177,7 @@ void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position) {
             (float) glyph.pixelHeight
         };
 
-        DrawTextureFragment(window, font.atlas, glyph.atlasRect, dest);
+        DrawTextureFragment(window, font.atlas, glyph.atlasRect, dest, color);
         position.x += glyph.advanceX;
     }
 }
