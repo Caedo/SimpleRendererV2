@@ -365,6 +365,21 @@ Vector3 GetCameraRight(Camera* cam) {
 // Strings, text and fonts
 //======================================
 
+bool StringEqual(Str8 a, Str8 b) {
+    if(a.length != b.length) {
+        return false;
+    }
+
+    for(int i = 0; i < a.length; i++) {
+        if(a[i] != b[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
 Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
     Font font = {};
     stbtt_fontinfo fontInfo = {};

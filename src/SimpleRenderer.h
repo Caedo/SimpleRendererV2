@@ -344,6 +344,61 @@ struct Font {
     GlyphData glyphData[CharacterRange - 32];
 };
 
+enum class UniformType {
+    Float,
+    Vec2,
+    Vec3,
+    Vec4,
+    Int,
+    IVec2,
+    IVec3,
+    IVec4,
+    UInt,
+    UVec2,
+    UVec3,
+    UVec4,
+    Bool,
+    BVec2,
+    BVec3,
+    BVec4,
+    // Mat2,
+    // Mat3,
+    Mat4,
+    // Mat2x3,
+    // Mat2x4,
+    // Mat3x2,
+    // Mat3x4,
+    // Mat4x2,
+    // Mat4x3
+};
+
+union UniformValue {
+    float    floatValue[4];
+    int32_t  intValue[4];
+    uint32_t uintValue[4];
+
+    GLuint texture;
+
+    Matrix matrix;
+};
+
+struct Uniform {
+    Str8 name;
+    GLint location;
+
+    int textureUnit;
+
+    UniformType type;
+    UniformValue value;
+};
+
+struct Material {
+    Shader shader;
+
+    int uniformsCount;
+    Uniform uniforms[16];
+};
+
 //========================================
 
 SRWindow* InitializeWindow(Str8 name);
@@ -435,6 +490,42 @@ void DrawRect(SRWindow* window, Rect rect, Vector4 color);
 void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin);
 void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination);
 
+//======================================
+// Materials
+//======================================
+
+Material CreateMaterial(Shader shader);
+
+void UseMaterial(SRWindow* window, Material* material);
+
+void AddUniform(Material* material, Str8 name, UniformType type, UniformValue value);
+void SetUniformValue(Material* material, Str8 name, UniformValue value);
+
+int GetUniformIndex(Material* material, Str8 name);
+Uniform GetUniform(Material* material, Str8 name);
+UniformValue& GetUniformValue(Material* material, Str8 name, UniformType type);
+
+float GetUniformValueFloat(Material* material, Str8 name);
+Vector2 GetUniformValueVec2(Material* material, Str8 name);
+Vector3 GetUniformValueVec3(Material* material, Str8 name);
+Vector4 GetUniformValueVec4(Material* material, Str8 name);
+
+int GetUniformValueInt(Material* material, Str8 name);
+Vector2 GetUniformValueIVec2(Material* material, Str8 name);
+Vector3 GetUniformValueIVec3(Material* material, Str8 name);
+Vector4 GetUniformValueIVec4(Material* material, Str8 name);
+
+uint32_t GetUniformValueUInt(Material* material, Str8 name);
+Vector2 GetUniformValueUVec2(Material* material, Str8 name);
+Vector3 GetUniformValueUVec3(Material* material, Str8 name);
+Vector4 GetUniformValueUVec4(Material* material, Str8 name);
+
+bool GetUniformValueBool(Material* material, Str8 name);
+Vector2 GetUniformValueBVec2(Material* material, Str8 name);
+Vector3 GetUniformValueBVec3(Material* material, Str8 name);
+Vector4 GetUniformValueBVec4(Material* material, Str8 name);
+
+Matrix GetUniformValueMatrix(Material* material, Str8 name);
 
 //========================================
 // Camera
@@ -454,6 +545,8 @@ Vector3 GetCameraRight(Camera* cam);
 // Strings, text and fonts
 //======================================
 #define Str8Lit(c) Str8{(c), sizeof(c) - 1}
+
+bool StringEqual(Str8 a, Str8 b);
 
 Font LoadFontFromMemory(const unsigned char* data, int fontSize);
 Font LoadFontAtPath(Str8 path, int fontSize, MemoryArena* arena);

@@ -920,6 +920,235 @@ void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect de
     AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
 }
 
+//========================================
+// Material
+//========================================
+
+Material CreateMaterial(Shader shader) {
+    Material result = {};
+    result.shader = shader;
+
+    return result;
+}
+
+void AddUniform(Material* material, Str8 name, UniformType type, UniformValue value) {
+    // @TODO: shader validation
+    Uniform uniform = {};
+    uniform.name    = name;
+    uniform.type    = type;
+    uniform.value   = value;
+
+    uniform.location = glGetUniformLocation(material->shader.id, name.str);
+
+    if(uniform.location == -1) {
+        fprintf(stderr, "Couldn't find uniform location with name %s", name.str);
+    }
+
+    material->uniforms[material->uniformsCount] = uniform;
+    material->uniformsCount += 1;
+}
+
+void UseMaterial(SRWindow* window, Material* material) {
+    UseShader(window, material->shader);
+
+    for(int i = 0; i < material->uniformsCount; i++) {
+        Uniform* uniform = material->uniforms + i;
+        switch(uniform->type) {
+            case UniformType::Float: glUniform1fv(uniform->location, 1, (const GLfloat*) &uniform->value);  break;
+            case UniformType::Vec2:  glUniform2fv(uniform->location, 1, (const GLfloat*) &uniform->value);  break;
+            case UniformType::Vec3:  glUniform3fv(uniform->location, 1, (const GLfloat*) &uniform->value);  break;
+            case UniformType::Vec4:  glUniform4fv(uniform->location, 1, (const GLfloat*) &uniform->value);  break;
+            
+            case UniformType::Int:   glUniform1iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
+            case UniformType::IVec2: glUniform2iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
+            case UniformType::IVec3: glUniform3iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
+            case UniformType::IVec4: glUniform4iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
+            
+            case UniformType::UInt:  glUniform1uiv(uniform->location, 1, (const GLuint*) &uniform->value);  break;
+            case UniformType::UVec2: glUniform2uiv(uniform->location, 1, (const GLuint*) &uniform->value);  break;
+            case UniformType::UVec3: glUniform3uiv(uniform->location, 1, (const GLuint*) &uniform->value);  break;
+            case UniformType::UVec4: glUniform4uiv(uniform->location, 1, (const GLuint*) &uniform->value);  break;
+            
+            case UniformType::Bool:  glUniform1iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
+            case UniformType::BVec2: glUniform1iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
+            case UniformType::BVec3: glUniform1iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
+            case UniformType::BVec4: glUniform1iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
+            
+            case UniformType::Mat4:  glUniformMatrix4fv(uniform->location, 1, false, (const GLfloat*) &uniform->value);  break;
+        }
+    }
+}
+
+void SetUniformValue(Material* material, Str8 name, UniformValue value) {
+    for(int i = 0; i < material->uniformsCount; i++) {
+        if(StringEqual(name, material->uniforms[i].name)) {
+            material->uniforms[i].value = value;
+            return;
+        }
+    }
+}
+
+int GetUniformIndex(Material* material, Str8 name) {
+    for(int i = 0; i < material->uniformsCount; i++) {
+        if(StringEqual(name, material->uniforms[i].name)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+Uniform GetUniform(Material* material, Str8 name) {
+    for(int i = 0; i < material->uniformsCount; i++) {
+        if(StringEqual(name, material->uniforms[i].name)) {
+            return material->uniforms[i];
+        }
+    }
+
+    return {};
+}
+
+UniformValue& GetUniformValue(Material* material, Str8 name, UniformType type) {
+    int idx = GetUniformIndex(material, name);
+    assert(idx != -1);
+
+    Uniform& uniform = material->uniforms[idx];
+    assert(uniform.type == type);
+
+    return uniform.value;
+}
+
+float GetUniformValueFloat(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::Float);
+    return v.floatValue[0];
+}
+
+Vector2 GetUniformValueVec2(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::Vec2);
+    return Vector2{
+        v.floatValue[0],
+        v.floatValue[1]
+    };
+}
+
+Vector3 GetUniformValueVec3(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::Vec3);
+    return Vector3{
+        v.floatValue[0],
+        v.floatValue[1],
+        v.floatValue[2]
+    };
+}
+
+Vector4 GetUniformValueVec4(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::Vec4);
+    return Vector4{
+        v.floatValue[0],
+        v.floatValue[1],
+        v.floatValue[2],
+        v.floatValue[3]
+    };
+}
+
+int GetUniformValueInt(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::Int);
+    return v.intValue[0];
+}
+
+// @NOTE: I don't have specific type for integer vectors, so I pack them into
+// standard Vectors. IEEE754 maps excact integer values so it shouldn't be
+// an issue apart from minor preformance hit when casting
+Vector2 GetUniformValueIVec2(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::IVec2);
+    return Vector2{
+        (float) v.intValue[0],
+        (float) v.intValue[1]
+    };
+}
+
+Vector3 GetUniformValueIVec3(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::IVec3);
+    return Vector3{
+        (float) v.intValue[0],
+        (float) v.intValue[1],
+        (float) v.intValue[2]
+    };
+}
+
+Vector4 GetUniformValueIVec4(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::IVec4);
+    return Vector4{
+        (float) v.intValue[0],
+        (float) v.intValue[1],
+        (float) v.intValue[2],
+        (float) v.intValue[3]
+    };
+}
+
+uint32_t GetUniformValueUInt(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::UInt);
+    return v.intValue[0];
+}
+
+Vector2 GetUniformValueUIVec2(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::UVec2);
+    return Vector2{
+        (float) v.uintValue[0],
+        (float) v.uintValue[1]
+    };
+}
+
+Vector3 GetUniformValueUIVec3(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::UVec3);
+    return Vector3{
+        (float) v.uintValue[0],
+        (float) v.uintValue[1],
+        (float) v.uintValue[2]
+    };
+}
+
+Vector4 GetUniformValueUIVec4(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::UVec4);
+    return Vector4{
+        (float) v.uintValue[0],
+        (float) v.uintValue[1],
+        (float) v.uintValue[2],
+        (float) v.uintValue[3]
+    };
+}
+
+bool GetUniformValueBool(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::Bool);
+    return !!v.intValue[0];
+}
+
+Vector2 GetUniformValueBVec2(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::BVec2);
+    return Vector2{
+        (float) !!v.intValue[0],
+        (float) !!v.intValue[1]
+    };
+}
+
+Vector3 GetUniformValueBVec3(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::BVec3);
+    return Vector3{
+        (float) !!v.intValue[0],
+        (float) !!v.intValue[1],
+        (float) !!v.intValue[2]
+    };
+}
+
+Vector4 GetUniformValueBVec4(Material* material, Str8 name) {
+    UniformValue& v = GetUniformValue(material, name, UniformType::BVec4);
+    return Vector4{
+        (float) !!v.intValue[0],
+        (float) !!v.intValue[1],
+        (float) !!v.intValue[2],
+        (float) !!v.intValue[3]
+    };
+}
+
 //=============================
 // Text
 //=============================
