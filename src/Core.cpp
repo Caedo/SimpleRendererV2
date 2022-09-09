@@ -380,7 +380,7 @@ bool StringEqual(Str8 a, Str8 b) {
 }
 
 
-Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
+Font LoadFontFromMemory(const unsigned char* data, int fontSize, MemoryArena* arena) {
     Font font = {};
     stbtt_fontinfo fontInfo = {};
 
@@ -421,8 +421,8 @@ Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
             uint8_t a;
         };
 
-        unsigned char *bitmap = (unsigned char*)malloc(bitmapSize * bitmapSize);
-        C* colorBitmap = (C*)malloc(sizeof(C) * bitmapSize * bitmapSize);
+        unsigned char *bitmap = (unsigned char*) PushArena(arena, bitmapSize * bitmapSize);
+        C* colorBitmap = (C*) PushArena(arena, sizeof(C) * bitmapSize * bitmapSize);
 
         stbtt_pack_context packContext;
         stbtt_packedchar packedGlyphs[CharacterRange];
@@ -475,9 +475,6 @@ Font LoadFontFromMemory(const unsigned char* data, int fontSize) {
 
             font.glyphData[i].advanceX = (int) packedGlyphs[i].xadvance;
         }
-
-        free(colorBitmap);
-        free(bitmap);
     }
 
     return font;
@@ -499,7 +496,7 @@ Font LoadFontAtPath(Str8 path, int fontSize, MemoryArena* arena) {
     fread(fileData, 1, length, file);
     fclose(file);
 
-    return LoadFontFromMemory((const unsigned char*)fileData, fontSize);
+    return LoadFontFromMemory((const unsigned char*)fileData, fontSize, arena);
 }
 
 int GetCodepoint(Str8 text, int* advance) {

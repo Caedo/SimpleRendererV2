@@ -548,7 +548,7 @@ Vector3 GetCameraRight(Camera* cam);
 
 bool StringEqual(Str8 a, Str8 b);
 
-Font LoadFontFromMemory(const unsigned char* data, int fontSize);
+Font LoadFontFromMemory(const unsigned char* data, int fontSize, MemoryArena* arena);
 Font LoadFontAtPath(Str8 path, int fontSize, MemoryArena* arena);
 Font LoadDefaultFont(int fontSize, MemoryArena* arena);
 

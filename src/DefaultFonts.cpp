@@ -385,5 +385,5 @@ Font LoadDefaultFont(int fontSize, MemoryArena* arena) {
     unsigned char* decompressedData = (unsigned char*) PushArena(arena, decompressedSize);
     stb_decompress(decompressedData, (const unsigned char *) DefaultFont1CompressedData, DefaultFont1CompressedSize);
 
-    return LoadFontFromMemory(decompressedData, fontSize);
+    return LoadFontFromMemory(decompressedData, fontSize, arena);
 }
