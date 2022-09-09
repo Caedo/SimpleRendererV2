@@ -550,6 +550,7 @@ bool StringEqual(Str8 a, Str8 b);
 
 Font LoadFontFromMemory(const unsigned char* data, int fontSize);
 Font LoadFontAtPath(Str8 path, int fontSize, MemoryArena* arena);
+Font LoadDefaultFont(int fontSize, MemoryArena* arena);
 
 int GetCodepoint(Str8 text, int* advance);
 int GetGlyphIndex(Str8 text, int* advance);

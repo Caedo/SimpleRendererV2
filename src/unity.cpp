@@ -16,5 +16,7 @@
 
 #include "ImGUI/imgui_demo.cpp"
 
+#include "DefaultFonts.cpp"
+
 #include "Memory.cpp"
 #include "Core.cpp"

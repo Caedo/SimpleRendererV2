@@ -11,7 +11,7 @@ int main()
     Camera camera = CreatePerspective(90.0f, 0.01f, 1000, (float) window->width / window->height);
     camera.position.x = -2;
 
-    Font font = LoadFontAtPath(Str8Lit("Roboto-Regular.ttf"), 60, &window->tempArena);
+    Font font = LoadDefaultFont(60, &window->tempArena);
     Str8 text = Str8Lit("Simple Renderer");
     int textWidth = MeasureStringWidth(text, font);
 
