@@ -2118,57 +2118,117 @@ RMAPI int QuaternionEquals(Quaternion p, Quaternion q)
 // Operator overloadings for C++
 // Made by @Caedo
 
-RMAPI Vector2 operator+(Vector2 a, Vector2 b) {
-    return Vector2Add(a, b);
+RMAPI Vector2 operator+(Vector2 left, Vector2 right) {
+    return Vector2Add(left, right);
 }
 
-RMAPI Vector3 operator+(Vector3 a, Vector3 b) {
-    return Vector3Add(a, b);
+RMAPI Vector3 operator+(Vector3 left, Vector3 right) {
+    return Vector3Add(left, right);
 }
 
-RMAPI Vector4 operator+(Vector4 a, Vector4 b) {
-    return {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
+RMAPI Vector4 operator+(Vector4 left, Vector4 right) {
+    return {left.x + right.x, left.y + right.y, left.z + right.z, left.w + right.w};
 }
 
-RMAPI Vector2 operator-(Vector2 a, Vector2 b) {
-    return Vector2Subtract(a, b);
+RMAPI Vector2& operator+=(Vector2& left, Vector2 right) {
+    return left = left + right;
 }
 
-RMAPI Vector3 operator-(Vector3 a, Vector3 b) {
-    return Vector3Subtract(a, b);
+RMAPI Vector3& operator+=(Vector3& left, Vector3 right) {
+    return left = left + right;
 }
 
-RMAPI Vector4 operator-(Vector4 a, Vector4 b) {
-    return {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
+RMAPI Vector4& operator+=(Vector4& left, Vector4 right) {
+    return left = left + right;
 }
 
-RMAPI Vector2 operator*(Vector2 a, float b) {
-    return Vector2Scale(a, b);
+RMAPI Vector2 operator-(Vector2 left, Vector2 right) {
+    return Vector2Subtract(left, right);
 }
 
-RMAPI Vector3 operator*(Vector3 a, float b) {
-    return Vector3Scale(a, b);
+RMAPI Vector3 operator-(Vector3 left, Vector3 right) {
+    return Vector3Subtract(left, right);
 }
 
-RMAPI Vector4 operator*(Vector4 a, float b) {
-    return {a.x * b, a.y * b, a.z * b, a.w * b};
+RMAPI Vector4 operator-(Vector4 left, Vector4 right) {
+    return {left.x - right.x, left.y - right.y, left.z - right.z, left.w - right.w};
 }
 
-RMAPI Vector2 operator/(Vector2 a, float b) {
-    return {a.x / b, a.y / b};
+RMAPI Vector2& operator-=(Vector2& left, Vector2 right) {
+    return left = left - right;
 }
 
-RMAPI Vector3 operator/(Vector3 a, float b) {
-    return {a.x / b, a.y / b, a.z / b};
+RMAPI Vector3& operator-=(Vector3& left, Vector3 right) {
+    return left = left - right;
 }
 
-RMAPI Vector4 operator/(Vector4 a, float b) {
-    return {a.x / b, a.y / b, a.z / b, a.w / b};
+RMAPI Vector4& operator-=(Vector4& left, Vector4 right) {
+    return left = left - right;
+}
+
+RMAPI Vector2 operator*(Vector2 left, float right) {
+    return Vector2Scale(left, right);
+}
+
+RMAPI Vector3 operator*(Vector3 left, float right) {
+    return Vector3Scale(left, right);
+}
+
+RMAPI Vector4 operator*(Vector4 left, float right) {
+    return {left.x * right, left.y * right, left.z * right, left.w * right};
+}
+
+RMAPI Vector2 operator*(float left, Vector2 right) {
+    return right * left;
+}
+
+RMAPI Vector3 operator*(float left, Vector3 right) {
+    return right * left;
+}
+
+RMAPI Vector4 operator*(float left, Vector4 right) {
+    return {right.x * left, right.y * left, right.z * right, right.w * left};
+}
+
+RMAPI Vector2& operator*=(Vector2& left, float right) {
+    return left = left * right;
+}
+
+RMAPI Vector3& operator*=(Vector3& left, float right) {
+    return left = left * right;
+}
+
+RMAPI Vector4& operator*=(Vector4& left, float right) {
+    return left = left * right;
+}
+
+RMAPI Vector2 operator/(Vector2 left, float right) {
+    return {left.x / right, left.y / right};
+}
+
+RMAPI Vector3 operator/(Vector3 left, float right) {
+    return {left.x / right, left.y / right, left.z / right};
+}
+
+RMAPI Vector4 operator/(Vector4 left, float right) {
+    return {left.x / right, left.y / right, left.z / right, left.w / right};
+}
+
+RMAPI Vector2& operator/=(Vector2& left, float right) {
+    return left = left / right;
+}
+
+RMAPI Vector3& operator/=(Vector3& left, float right) {
+    return left = left / right;
+}
+
+RMAPI Vector4& operator/=(Vector4& left, float right) {
+    return left = left / right;
 }
 
 // Matrix
-RMAPI Matrix operator*(Matrix a, Matrix b) {
-    return MatrixMultiply(a, b);
+RMAPI Matrix operator*(Matrix left, Matrix right) {
+    return MatrixMultiply(left, right);
 }
 
 RMAPI Vector2 operator*(Matrix m, Vector2 v) {
