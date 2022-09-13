@@ -9,6 +9,8 @@ SRWindow windowInstance = {};
 
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void ResizeCallback(GLFWwindow* window, int width, int height);
+void GLFWErrorCallback(int, const char *);
+void OGLMessageCallback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam );
 
 SRWindow* InitializeWindow(Str8 name) {
     // @TODO: expose width and height to use code
@@ -17,7 +19,7 @@ SRWindow* InitializeWindow(Str8 name) {
 
     // GLFW Init
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -33,6 +35,7 @@ SRWindow* InitializeWindow(Str8 name) {
 
     glfwSetKeyCallback(windowInstance.glfwWin, KeyCallback);
     glfwSetFramebufferSizeCallback(windowInstance.glfwWin, ResizeCallback);
+    glfwSetErrorCallback(GLFWErrorCallback);
 
     windowInstance.tempArena = CreateArena();
 
@@ -74,7 +77,13 @@ SRWindow* InitializeWindow(Str8 name) {
     
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(windowInstance.glfwWin, true);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
+    ImGui_ImplOpenGL3_Init("#version 430 core");
+
+    // Debug context
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(OGLMessageCallback, 0);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, NULL, GL_FALSE);
 
     return &windowInstance;
 }
@@ -145,6 +154,50 @@ void ResizeCallback(GLFWwindow* window, int width, int height) {
     windowInstance.height = height;
 
     windowInstance.resizedThisFrame = true;
+}
+
+void GLFWErrorCallback(int errorCode, const char* message) {
+    fprintf(
+        stderr,
+        "[GLFW][ERROR] GLFW encountered an error!\nError Code: %d\nMessage: %s\n\n",
+        errorCode,
+        message
+    );
+}
+
+void OGLMessageCallback(GLenum source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei length,
+        const GLchar* message,
+        const void* userParam)
+{
+    const char* severityStr = severity == GL_DEBUG_SEVERITY_LOW          ? "LOW" : 
+                              severity == GL_DEBUG_SEVERITY_MEDIUM       ? "MEDIUM" :
+                              severity == GL_DEBUG_SEVERITY_HIGH         ? "HIGH" :
+                              severity == GL_DEBUG_SEVERITY_NOTIFICATION ? "NOTIFICATION" :
+                                                                        "FUCK";
+    const char* typeStr = "";
+    switch(type) {
+        case GL_DEBUG_TYPE_ERROR:               typeStr = "ERROR";               break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: typeStr = "DEPRECATED BEHAVIOR"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  typeStr = "UNDEFINED BEHAVIOR";  break;
+        case GL_DEBUG_TYPE_PORTABILITY:         typeStr = "PORTABILITY";         break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         typeStr = "PERFORMANCE";         break;
+        case GL_DEBUG_TYPE_MARKER:              typeStr = "MARKER";              break;
+        case GL_DEBUG_TYPE_POP_GROUP:           typeStr = "POP GROUP";           break;
+        case GL_DEBUG_TYPE_OTHER:               typeStr = "OTHER";               break;
+    }
+
+    fprintf(
+        stderr,
+        "[OGL] %s\ntype: %s\nseverity: %s\nmessage: %s\n\n",
+        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+        typeStr,
+        severityStr,
+        message
+    );
 }
 
 //========================================

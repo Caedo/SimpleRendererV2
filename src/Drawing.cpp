@@ -20,7 +20,7 @@ Shader ScreenSpaceShader;
 //=========================================
 
 const char* DefaultVertexShaderSource = 
-R"###(#version 330 core
+R"###(#version 430 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNorm;
 layout (location = 2) in vec2 aUV;
@@ -40,7 +40,7 @@ void main() {
 })###";
 
 const char* VertexColorShaderSource =
-R"###(#version 330 core
+R"###(#version 430 core
 in vec4 vertexColor;
 out vec4 FragColor;
 void main() {
@@ -48,7 +48,7 @@ void main() {
 })###";
 
 const char* ColorShaderSource =
-R"###(#version 330 core
+R"###(#version 430 core
 uniform vec4 tint;
 out vec4 FragColor;
 void main() {
@@ -56,7 +56,7 @@ void main() {
 })###";
 
 const char* TextureShaderSource =
-R"###(#version 330 core
+R"###(#version 430 core
 uniform vec4 tint;
 uniform sampler2D tex;
 in vec2 uv;
@@ -67,7 +67,7 @@ void main() {
 })###";
 
 const char* ErrorFragmentShaderSource =
-R"###(#version 330 core
+R"###(#version 430 core
 out vec4 FragColor;
 void main() {
     FragColor = vec4(1, 0, 1, 1);
@@ -75,7 +75,7 @@ void main() {
 
 
 const char* ScreenSpaceVertexSource = 
-R"###(#version 330 core
+R"###(#version 430 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aUV;
 layout (location = 2) in vec4 aColor;
@@ -103,7 +103,7 @@ void main() {
 
 
 const char* ScreenSpaceFragmentSource = 
-R"###(#version 330 core
+R"###(#version 430 core
 in vec2 uv;
 in vec4 vertexColor;
 
@@ -941,7 +941,7 @@ void AddUniform(Material* material, Str8 name, UniformType type, UniformValue va
     uniform.location = glGetUniformLocation(material->shader.id, name.str);
 
     if(uniform.location == -1) {
-        fprintf(stderr, "Couldn't find uniform location with name %s", name.str);
+        fprintf(stderr, "[Error:Materials] Couldn't find uniform location with name %s\n", name.str);
     }
 
     material->uniforms[material->uniformsCount] = uniform;
