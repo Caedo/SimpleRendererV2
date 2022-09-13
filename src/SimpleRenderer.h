@@ -94,6 +94,8 @@ struct Texture {
     // @TODO: texture units
 };
 
+extern Texture ErrorTexture;
+
 struct Rect {
     float x, y;
     float width, height;

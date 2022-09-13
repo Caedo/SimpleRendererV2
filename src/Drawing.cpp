@@ -15,6 +15,8 @@ Shader TextureShader;
 Shader VertexColorShader;
 Shader ScreenSpaceShader;
 
+Texture ErrorTexture;
+
 //=========================================
 // Default shaders
 //=========================================
@@ -718,7 +720,8 @@ Texture LoadTextureAtPath(char* path, MemoryArena* arena) {
     FILE* file;
     errno_t err = fopen_s(&file, path, "rb");
     if(err != 0) {
-        return ret;
+        fprintf(stderr, "[Error] Can't find texture at path: %s\n", path);
+        return ErrorTexture;
     }
 
     // TODO: ReadEntireFile
