@@ -979,6 +979,29 @@ void UseMaterial(SRWindow* window, Material* material) {
     }
 }
 
+UniformValue UValue(float v) {
+    return { v };
+}
+
+UniformValue UValue(Vector2 v) {
+    return {v.x, v.y};
+}
+
+UniformValue UValue(Vector3 v) {
+    return {v.x, v.y, v.z};
+}
+
+UniformValue UValue(Vector4 v) {
+    return {v.x, v.y, v.z, v.w};
+}
+
+UniformValue UValue(Matrix mat) {
+    UniformValue u;
+    u.matrix = mat;
+
+    return u;
+}
+
 void SetUniformValue(Material* material, Str8 name, UniformValue value) {
     for(int i = 0; i < material->uniformsCount; i++) {
         if(StringEqual(name, material->uniforms[i].name)) {
