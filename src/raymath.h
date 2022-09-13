@@ -2187,7 +2187,7 @@ RMAPI Vector3 operator*(float left, Vector3 right) {
 }
 
 RMAPI Vector4 operator*(float left, Vector4 right) {
-    return {right.x * left, right.y * left, right.z * right, right.w * left};
+    return {right.x * left, right.y * left, right.z * left, right.w * left};
 }
 
 RMAPI Vector2& operator*=(Vector2& left, float right) {

@@ -357,9 +357,18 @@ Vector3 GetCameraRight(Camera* cam) {
     float pitch = cam->rotation.x;
 
     Vector3 forward = GetCameraForward(cam);
-    return Vector3Normalize(Vector3CrossProduct(cam->worldUp, forward));
+    return Vector3Normalize(Vector3CrossProduct(forward, cam->worldUp));
 }
 
+
+Vector3 GetCameraUp(Camera* cam) {
+    float yaw = cam->rotation.y;
+    float pitch = cam->rotation.x;
+
+    Vector3 forward = GetCameraForward(cam);
+    Vector3 right = GetCameraRight(cam);
+    return Vector3Normalize(Vector3CrossProduct(right, forward));
+}
 
 //======================================
 // Strings, text and fonts

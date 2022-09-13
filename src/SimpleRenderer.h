@@ -540,6 +540,7 @@ Matrix GetVPMatrix(Camera *cam);
 
 Vector3 GetCameraForward(Camera* cam);
 Vector3 GetCameraRight(Camera* cam);
+Vector3 GetCameraUp(Camera* cam);
 
 //======================================
 // Strings, text and fonts
