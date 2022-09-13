@@ -3,7 +3,7 @@
 if NOT "%Platform%" == "X64" IF NOT "%Platform%" == "x64" (call vcvarsall x64)
 
 set exe_name=SimpleRenderer
-set compile_flags= -nologo /Zi /FC /I ../include/ /W3 /D UNITY_BUILD
+set compile_flags= -nologo /Zi /FC /I ../include/ /W3 /D UNITY_BUILD /fsanitize=address
 set linker_flags= glfw3dll.lib gdi32.lib user32.lib kernel32.lib opengl32.lib /INCREMENTAL:NO
 set linker_path="../lib/"
 
