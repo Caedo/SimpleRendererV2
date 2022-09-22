@@ -2,13 +2,10 @@
 #include "../../src/unity.cpp"
 #endif
 
-
 int main() {
     SRWindow* window = InitializeWindow(Str8Lit("Szescian.cpp"));
-    Font font = LoadFontAtPath(Str8Lit("../common/Roboto-Regular.ttf"), 40, &window->tempArena);
 
     Mesh mesh = CreateCubeMesh();
-    ApplyMesh(&mesh);
 
     Camera camera = CreatePerspective(90, 0.01f, 1000.0f, (float)window->width / window->height);
     camera.position.x = -2;

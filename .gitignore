@@ -3,8 +3,10 @@
 *.obj
 *.exe
 *.pdb
+*.exp
 
 /examples/*/*.dll
 /examples/*/*.lib
+/examples/*/*.ini
 
 .vs
