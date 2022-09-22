@@ -182,19 +182,6 @@ void DepthTest(SRWindow* window, bool enabled) {
     window->glStateStack[window->glStateIndex].depthTest = enabled;
 }
 
-void Blending(SRWindow* window, bool enabled) {
-    // @TODO: other function
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    if(enabled){
-        glEnable(GL_BLEND);
-    }
-    else {
-        glDisable(GL_BLEND);
-    }
-
-    window->glStateStack[window->glStateIndex].blending = enabled;
-}
 
 void UseShader(SRWindow* window, Shader shader) {
     uint32_t id = shader.isValid ? shader.id : ErrorShader.id;
@@ -215,6 +202,33 @@ void ClearDepthBuffer() {
 void ClearColorAndDepthBuffer(Vector4 color) {
     glClearColor(color.x, color.y, color.z, color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+//=========================================
+// Blending
+//=========================================
+
+void Blending(SRWindow* window, bool enabled) {
+    if(enabled){
+        glEnable(GL_BLEND);
+    }
+    else {
+        glDisable(GL_BLEND);
+    }
+
+    window->glStateStack[window->glStateIndex].blending = enabled;
+}
+
+void SetBlendingAlphaBlend(SRWindow* window) {
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void SetBlendingAdditive(SRWindow* window) {
+    glBlendFunc(GL_ONE, GL_ONE);
+}
+
+void SetBlendingPremultipliedAlpha(SRWindow* window) {
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 //=========================================
@@ -831,6 +845,8 @@ void RenderBatch(SRWindow* window, Batch* batch) {
         true,            // blending
         ScreenSpaceShader// shder
     );
+
+    SetBlendingAlphaBlend(window);
 
     glUniform1i(glGetUniformLocation(ScreenSpaceShader.id, "framebufferWidth"), window->width);
     glUniform1i(glGetUniformLocation(ScreenSpaceShader.id, "framebufferHeight"), window->height);

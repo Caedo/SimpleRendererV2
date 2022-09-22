@@ -438,13 +438,21 @@ GLState PopGLState(SRWindow* window);
 
 void FaceCulling(SRWindow* window, bool enabled);
 void DepthTest(SRWindow* window, bool enabled);
-void Blending(SRWindow* window, bool enabled);
 
 void UseShader(SRWindow* window, Shader shader);
 
 void ClearColorBuffer(Vector4 color);
 void ClearDepthBuffer();
 void ClearColorAndDepthBuffer(Vector4 color);
+
+//=========================================
+// Blending
+//=========================================
+void Blending(SRWindow* window, bool enabled);
+
+void SetBlendingAlphaBlend(SRWindow* window);
+void SetBlendingAdditive(SRWindow* window);
+void SetBlendingPremultipliedAlpha(SRWindow* window);
 
 //=========================================
 // Shaders
