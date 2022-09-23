@@ -39,7 +39,7 @@ void MoveCamera(Camera* camera, SRWindow* window) {
     camera->position += GetCameraForward(camera) * input.x + GetCameraRight(camera) * input.y;
     camera->position += GetCameraUp(camera) * up * CAMERA_SPEED_Y * window->timeDelta;
 
-    if(window->leftMouseBtnPressed) {
+    if(window->rightMouseBtnPressed) {
         float mouseX = window->mouseDelta.x * MOUSE_SENSITIVITY_X * window->timeDelta;
         float mouseY = window->mouseDelta.y * MOUSE_SENSITIVITY_Y * window->timeDelta;
 
