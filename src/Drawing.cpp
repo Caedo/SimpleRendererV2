@@ -339,6 +339,78 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath, Memo
     return LoadShaderSource(vertexSource, fragmentSource);
 }
 
+Shader GetActiveShader(SRWindow* window) {
+    return window->glStateStack[window->glStateIndex].shader;
+}
+
+void SetShaderUniform(SRWindow* window, char *name, int value) {
+    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    if (loc != -1) {
+        glUniform1i(loc, value);
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform Float: %s\n", name);
+    }
+}
+
+void SetShaderUniform(SRWindow* window, char *name, float value) {
+    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    if (loc != -1)
+    {
+        glUniform1f(loc, value);
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform Float: %s\n", name);
+    }
+}
+
+void SetShaderUniform(SRWindow* window, char *name, Vector2 value) {
+    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    if(loc != -1) {
+        glUniform2f(loc, value.x, value.y);
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform Vec2: %s\n", name);
+    }
+}
+
+void SetShaderUniform(SRWindow* window, char *name, Vector3 value){
+    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    if (loc != -1) {
+        glUniform3f(loc, value.x, value.y, value.z);
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform Vec3: %s\n", name);
+    }
+}
+
+void SetShaderUniform(SRWindow* window, char *name, Vector4 value) {
+    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    if (loc != -1) {
+        // glUniform4f(loc, value.x, value.y, value.z, value.w);
+        glUniform4fv(loc, 1, (const float *)(&value));
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform color: %s\n", name);
+    }
+}
+
+void SetShaderUniform(SRWindow* window, char* name, Matrix value) {
+    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    if (loc != -1) {
+        // glUniform4f(loc, value.x, value.y, value.z, value.w);
+        glUniformMatrix4fv(loc, 1, false, (const float *)(&value));
+    }
+    else {
+        // @TODO: logger
+        // printf("Couldn't find uniform color: %s\n", name);
+    }
+}
 //=========================================
 // Meshes
 //=========================================
