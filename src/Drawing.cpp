@@ -411,12 +411,17 @@ void SetShaderUniform(SRWindow* window, char* name, Matrix value) {
         // printf("Couldn't find uniform color: %s\n", name);
     }
 }
+
 //=========================================
 // Meshes
 //=========================================
 
 void ApplyMesh(Mesh *mesh)
 {
+    for(int i = 0; i < mesh->triangles.length; i++) {
+        assert(mesh->triangles[i] < mesh->vertices.length);
+    }
+
     glGenVertexArrays(1, &mesh->VAO);
     glGenBuffers(1, &mesh->positionsVBO);
     glGenBuffers(1, &mesh->EBO);
@@ -433,6 +438,8 @@ void ApplyMesh(Mesh *mesh)
 
     if (mesh->normals.length != 0)
     {
+        assert(mesh->normals.length == mesh->vertices.length);
+
         glGenBuffers(1, &mesh->normalsVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->normalsVBO);
         glBufferData(GL_ARRAY_BUFFER, mesh->normals.length * sizeof(Vector3), mesh->normals.data, GL_STATIC_DRAW);
@@ -443,6 +450,8 @@ void ApplyMesh(Mesh *mesh)
 
     if (mesh->uv.length != 0)
     {
+        assert(mesh->uv.length == mesh->vertices.length);
+
         glGenBuffers(1, &mesh->uvVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->uvVBO);
         glBufferData(GL_ARRAY_BUFFER, mesh->uv.length * sizeof(Vector2), mesh->uv.data, GL_STATIC_DRAW);
@@ -453,6 +462,8 @@ void ApplyMesh(Mesh *mesh)
 
     if (mesh->colors.length != 0)
     {
+        assert(mesh->colors.length == mesh->vertices.length);
+
         glGenBuffers(1, &mesh->colorsVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->colorsVBO);
         glBufferData(GL_ARRAY_BUFFER, mesh->colors.length * sizeof(Vector4), mesh->colors.data, GL_STATIC_DRAW);
