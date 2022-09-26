@@ -11,6 +11,9 @@
 
 #include "raymath.h"
 
+#define FLOAT_MAX 3.402823466e+38F
+#define FLOAT_MIN 1.175494351e-38F
+
 enum class CameraType
 {
     Perspective,
@@ -245,6 +248,18 @@ struct Input {
     // @TODO: move mouse state here?
 };
 
+#define FRAME_TIMING_UPDATE_INTERVAL 0.5f
+
+struct FrameTimeData {
+    int frameCount;
+    float frameTimeSum;
+
+    float meanFrameTime;
+
+    float minFrameTime;
+    float maxFrameTime;
+};
+
 struct BatchVertex {
     Vector3 position;
     Vector2 uv;
@@ -286,6 +301,8 @@ struct SRWindow {
     MemoryArena tempArena;
 
     RenderState state;
+
+    FrameTimeData frameTimeData;
 
     // @Note: it is size of the framebuffer.
     // If you want the window size call glfwGetWindowFrameSize()
@@ -415,6 +432,11 @@ void FrameEnd(SRWindow* window);
 KeyState GetKeyState(SRWindow* window, Key key);
 bool IsKeyDown(SRWindow* window, Key key);
 bool IsKeyUp(SRWindow* window, Key key);
+
+//========================================
+// FrameTiming
+//========================================
+void ShowFrameTime(SRWindow* window, Vector2 position);
 
 //========================================
 // Batch

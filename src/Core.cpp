@@ -5,6 +5,8 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui.h"
 
+#include <float.h> // for FLT_MIN and FLT_MAX
+
 SRWindow windowInstance = {};
 
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -157,7 +159,29 @@ void FrameEnd(SRWindow* window) {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+    // Frame Time
+    // NOTE: very simple and not really precise. It should be enough to 
+    // check for coarse frame time, but for better timings you should
+    // use specialized profiler or timing functions.
+    FrameTimeData* d = &window->frameTimeData;
+    d->frameCount += 1;
+    d->frameTimeSum += window->timeDelta;
+
+    d->minFrameTime = fminf(d->minFrameTime, window->timeDelta);
+    d->maxFrameTime = fmaxf(d->maxFrameTime, window->timeDelta);
+
+    if(d->frameTimeSum >= FRAME_TIMING_UPDATE_INTERVAL) {
+        d->meanFrameTime = d->frameTimeSum / d->frameCount;
+
+        d->frameCount   = 0;
+        d->frameTimeSum = 0;
+
+        d->minFrameTime = d->meanFrameTime;
+        d->maxFrameTime = d->meanFrameTime;
+    }
+
     ClearArena(&window->tempArena);
+
     glfwSwapBuffers(window->glfwWin);
     glfwPollEvents();
 
@@ -255,6 +279,30 @@ bool IsKeyDown(SRWindow* window, Key key) {
 bool IsKeyUp(SRWindow* window, Key key) {
     return window->input.currentKeys[key] == false;
 }
+
+//========================================
+// Frame Timing
+//========================================
+
+void ShowFrameTime(SRWindow* window, Vector2 position) {
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+    ImGui::SetNextWindowBgAlpha(0.35f);
+    ImGui::SetNextWindowPos(ImVec2(position.x, position.y));
+
+    bool open = true;
+    if(ImGui::Begin("Frame Timing Data", &open, window_flags)) {
+        ImGui::Text("Mean Frame Time: %.2f ms", window->frameTimeData.meanFrameTime * 1000);
+        ImGui::Text("Mean FPS:        %.2f 1/ms", 1 / window->frameTimeData.meanFrameTime);
+
+        ImGui::Separator();
+        ImGui::Text("Min Frame Time: %.2f ms", window->frameTimeData.minFrameTime * 1000);
+        ImGui::Text("Max Frame Time: %.2f ms", window->frameTimeData.maxFrameTime * 1000);
+
+        ImGui::End();
+    }
+}
+
 
 //========================================
 // Batch
