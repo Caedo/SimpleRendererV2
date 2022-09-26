@@ -14,10 +14,10 @@ void ResizeCallback(GLFWwindow* window, int width, int height);
 void GLFWErrorCallback(int, const char *);
 void OGLMessageCallback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam );
 
-SRWindow* InitializeWindow(Str8 name) {
+SRWindow* InitializeWindow(Str8 name, int width, int height) {
     // @TODO: expose width and height to use code
-    windowInstance.width = 800;
-    windowInstance.height = 600;
+    windowInstance.width = width;
+    windowInstance.height = height;
 
     // GLFW Init
     glfwInit();
@@ -25,7 +25,7 @@ SRWindow* InitializeWindow(Str8 name) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    windowInstance.glfwWin = glfwCreateWindow(800, 600, name.str, NULL, NULL);
+    windowInstance.glfwWin = glfwCreateWindow(width, height, name.str, NULL, NULL);
     if (windowInstance.glfwWin == NULL)
     {
         printf("Failed to Initialie GLFW Window!!! \n");
@@ -35,6 +35,7 @@ SRWindow* InitializeWindow(Str8 name) {
 
     glfwMakeContextCurrent(windowInstance.glfwWin);
 
+    // Callbacks
     glfwSetKeyCallback(windowInstance.glfwWin, KeyCallback);
     glfwSetFramebufferSizeCallback(windowInstance.glfwWin, ResizeCallback);
     glfwSetErrorCallback(GLFWErrorCallback);
@@ -51,6 +52,7 @@ SRWindow* InitializeWindow(Str8 name) {
 
     glfwSwapInterval(1);
 
+    // built-in shaders
     ErrorShader = LoadShaderSource(DefaultVertexShaderSource, ErrorFragmentShaderSource);
     ColorShader = LoadShaderSource(DefaultVertexShaderSource, ColorShaderSource);
     TextureShader = LoadShaderSource(DefaultVertexShaderSource, TextureShaderSource);
@@ -63,6 +65,7 @@ SRWindow* InitializeWindow(Str8 name) {
     assert(VertexColorShader.isValid);
     assert(ScreenSpaceShader.isValid);
 
+    // Error textures
     glGenTextures(1, &ErrorTexture.id);
     glBindTexture(GL_TEXTURE_2D, ErrorTexture.id);
 

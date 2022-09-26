@@ -420,7 +420,7 @@ struct Material {
 
 //========================================
 
-SRWindow* InitializeWindow(Str8 name);
+SRWindow* InitializeWindow(Str8 name, int width = 1270, int height = 720);
 bool ShouldClose(SRWindow* window);
 
 void FrameStart(SRWindow* window);
