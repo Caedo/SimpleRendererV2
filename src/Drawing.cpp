@@ -5,6 +5,8 @@
 #include <memory.h>
 #include <assert.h>
 
+#include <errno.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 #undef STB_IMAGE_IMPLEMENTATION
@@ -310,13 +312,17 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath, Memo
     }
     else
     {
-        printf("[ERROR] Failed to open vertex shader source file at path: %s\n", vertexPath);
+        // EACCES can happen when OS don't have time to properly close file after cheching it's modification time
+        // in that case we ignore print, because it will spam logs, even thou it is somewhat expected behaviour
+        if(err != EACCES) {
+            fprintf(stderr, "[ERROR] Failed to open vertex shader source file at path: %s. Errno: %d \n", vertexPath, err);
+        }
         return {0};
     }
 
     FILE *fragmentFile;
     err = fopen_s(&fragmentFile, fragmentPath, "rb");
-    if(err == 0)
+    if(fragmentFile)
     {
         // TODO: ReadEntireFile
 
@@ -332,11 +338,53 @@ Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath, Memo
     }
     else
     {
-        printf("[ERROR] Failed to open fragment shader source file at path: %s\n", fragmentPath);
+        // EACCES can happen when OS don't have time to properly close file after cheching it's modification time
+        // in that case we ignore print, because it will spam logs, even thou it is somewhat expected behaviour
+        if(err != EACCES) {
+            fprintf(stderr, "[ERROR] Failed to open fragment shader source file at path: %s. Errno: %d \n", fragmentPath, err);
+        }
         return {0};
     }
 
-    return LoadShaderSource(vertexSource, fragmentSource);
+    Shader shader = LoadShaderSource(vertexSource, fragmentSource);
+
+    shader.vertFileData.changeTime  = Win32_GetLastWriteTime(vertexPath);
+    shader.vertFileData.path.str    = (char*) vertexPath;
+    shader.vertFileData.path.length = strlen(vertexPath);
+
+    shader.fragFileData.changeTime  = Win32_GetLastWriteTime(fragmentPath);
+    shader.fragFileData.path.str    = (char*) fragmentPath;
+    shader.fragFileData.path.length = strlen(fragmentPath);
+
+    return shader;
+}
+
+bool ReloadShaderIfNecessary(Shader* shader, MemoryArena* arena) {
+    bool fragChanged = Win32_FileHasChanged(shader->fragFileData);
+    bool vertChanged = Win32_FileHasChanged(shader->vertFileData);
+    if(fragChanged == false && vertChanged == false) {
+        return false;
+    }
+
+    Shader newShader = LoadShaderFromFile(shader->vertFileData.path.str, shader->fragFileData.path.str, arena);
+
+    // Shader can fail to compile, or shader source files cannot be oppened at this time (common when 
+    // checking for modification time). In those situations we ignore incomming changes
+    if(newShader.isValid) {
+        UnloadShader(shader);
+        *shader = newShader;
+
+        return true;
+    }
+
+    return false;
+}
+
+void UnloadShader(Shader* shader) {
+    glDeleteProgram(shader->id);
+
+    shader->isValid = false;
+    shader->id = -1;
 }
 
 Shader GetActiveShader(SRWindow* window) {

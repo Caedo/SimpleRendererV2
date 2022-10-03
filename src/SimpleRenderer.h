@@ -14,6 +14,18 @@
 #define FLOAT_MAX 3.402823466e+38F
 #define FLOAT_MIN 1.175494351e-38F
 
+
+
+struct Str8 {
+    char* str;
+    uint64_t length;
+
+    char operator[] (int index) {
+        assert(index < length && index >= 0);
+        return str[index];
+    }
+};
+
 enum class CameraType
 {
     Perspective,
@@ -40,6 +52,13 @@ struct Camera
 
 /////////////////////////////////////
 
+struct FileData {
+    Str8 path;
+    uint64_t changeTime;
+};
+
+//////////////////////////////////////
+
 enum VertexBufferIndex {
     VertexPositionIndex = 0,
     VertexNormalIndex   = 1,
@@ -51,6 +70,9 @@ struct Shader
 {
     bool isValid;
     uint32_t id;
+
+    FileData vertFileData;
+    FileData fragFileData;
 };
 
 // Built in shaders for simple rendering
@@ -330,17 +352,6 @@ struct SRWindow {
     bool resizedThisFrame;
 };
 
-// Text and fonts
-struct Str8 {
-    char* str;
-    uint64_t length;
-
-    char operator[] (int index) {
-        assert(index < length && index >= 0);
-        return str[index];
-    }
-};
-
 #define CharacterRange 383 // @TODO: dynamic range 
 struct GlyphData {
     int codepoint;
@@ -482,6 +493,8 @@ void SetBlendingPremultipliedAlpha(SRWindow* window);
 
 Shader LoadShaderSource(const char *vertexShader, const char *fragmentShader);
 Shader LoadShaderFromFile(const char *vertexPath, const char *fragmentPath, MemoryArena* arena);
+bool ReloadShaderIfNecessary(Shader* shader, MemoryArena* arena);
+void UnloadShader(Shader* shader);
 
 void SetUniformFloat(Shader shader, char *name, float value);
 void SetUniformVec2(Shader shader, char *name, Vector2 value);
@@ -562,6 +575,7 @@ Matrix GetUniformValueMatrix(Material* material, Str8 name);
 //========================================
 // Camera
 //========================================
+
 Camera CreateOrtographic(float ortographicSize, float nearPlane, float farPlane, float aspect);
 Camera CreatePerspective(float fov, float nearPlane, float farPlane, float aspect);
 
@@ -590,5 +604,9 @@ int GetGlyphIndex(Str8 text, int* advance);
 
 void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position, Vector4 color = {0, 0, 0, 1});
 int MeasureStringWidth(Str8 text, Font font);
+
+// Temp platform specific definitions
+uint64_t Win32_GetLastWriteTime(const char* filePath);
+bool Win32_FileHasChanged(FileData fileData);
 
 #endif
