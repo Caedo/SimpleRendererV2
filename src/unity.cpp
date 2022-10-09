@@ -2,7 +2,6 @@
 #include "raymath.h"
 #undef RAYMATH_IMPLEMENTATION
 
-
 #include "Drawing.cpp"
 #include "glad.c"
 
@@ -17,6 +16,8 @@
 #include "ImGUI/imgui_demo.cpp"
 
 #include "DefaultFonts.cpp"
+
+#include "PlatformWin32.cpp"
 
 #include "Memory.cpp"
 #include "Core.cpp"
