@@ -64,7 +64,6 @@ Slice<T> MakeSlice(T* array, int start, int end) {
     return ret;
 }
 
-
 template <typename T>
 Slice<T> AllocateSlice(int length) {
     Slice<T> ret = {0};
@@ -73,6 +72,17 @@ Slice<T> AllocateSlice(int length) {
     ret.data = (T*) malloc(sizeof(T) * length);
     assert(ret.data);
 
+    return ret;
+}
+
+
+template <typename T>
+Slice<T> PushSliceToArena(MemoryArena* arena, int length) {
+    Slice<T> ret = {0};
+
+    ret.length = length;
+    ret.data = (T*) PushArena(arena, sizeof(T) * length);
+ 
     return ret;
 }
 

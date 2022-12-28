@@ -535,16 +535,16 @@ void DeleteMesh(Mesh* mesh) {
     glDeleteBuffers(1, &mesh->uvVBO);
 }
 
-Mesh CreateQuadMesh()
+Mesh CreateQuadMesh(MemoryArena* arena)
 {
     Mesh mesh = {};
-    mesh.vertices = AllocateSlice<Vector3>(4);
+    mesh.vertices = PushSliceToArena<Vector3>(arena, 4);
     mesh.vertices[0] = {0.5f, 0.5f, 0.0f},   // top right
     mesh.vertices[1] = {0.5f, -0.5f, 0.0f},   // top right
     mesh.vertices[2] = {-0.5f, -0.5f, 0.0f},   // top right
     mesh.vertices[3] = {-0.5f, 0.5f, 0.0f},   // top right
 
-    mesh.triangles = AllocateSlice<int>(6);
+    mesh.triangles = PushSliceToArena<int>(arena, 6);
     mesh.triangles[0] = 0;
     mesh.triangles[1] = 3;
     mesh.triangles[2] = 1;
@@ -553,7 +553,7 @@ Mesh CreateQuadMesh()
     mesh.triangles[4] = 3;
     mesh.triangles[5] = 2;
 
-    mesh.normals = AllocateSlice<Vector3>(4);
+    mesh.normals = PushSliceToArena<Vector3>(arena, 4);
     mesh.normals[0] = {0, 0, 1};
     mesh.normals[1] = {0, 0, 1};
     mesh.normals[2] = {0, 0, 1};
@@ -564,15 +564,15 @@ Mesh CreateQuadMesh()
     return mesh;
 }
 
-Mesh CreateCubeMesh()
+Mesh CreateCubeMesh(MemoryArena* arena)
 {
     Mesh mesh = {};
 
-    mesh.vertices  = AllocateSlice<Vector3>(24);
-    mesh.normals   = AllocateSlice<Vector3>(24);
-    mesh.uv        = AllocateSlice<Vector2>(24);
-    mesh.colors    = AllocateSlice<Vector4>(24);
-    mesh.triangles = AllocateSlice<int>(36);
+    mesh.vertices  = PushSliceToArena<Vector3>(arena, 24);
+    mesh.normals   = PushSliceToArena<Vector3>(arena, 24);
+    mesh.uv        = PushSliceToArena<Vector2>(arena, 24);
+    mesh.colors    = PushSliceToArena<Vector4>(arena, 24);
+    mesh.triangles = PushSliceToArena<int>(arena, 36);
 
     // front
     mesh.vertices[0] = {0.5f, 0.5f, 0.5f},   // top right 0
@@ -709,7 +709,7 @@ Mesh CreateCubeMesh()
     return mesh;
 }
 
-Mesh CreatePlaneMesh() {
+Mesh CreatePlaneMesh(MemoryArena* arena) {
     Mesh mesh = {};
 
     const int meshSize = 11;
@@ -717,9 +717,9 @@ Mesh CreatePlaneMesh() {
     int vertsCount     = meshSize * meshSize;
     int trianglesCount = (meshSize - 1) * (meshSize - 1) * 6;
 
-    mesh.vertices  = AllocateSlice<Vector3>(vertsCount);
-    mesh.normals   = AllocateSlice<Vector3>(vertsCount);
-    mesh.triangles = AllocateSlice<int>(trianglesCount);
+    mesh.vertices  = PushSliceToArena<Vector3>(arena, vertsCount);
+    mesh.normals   = PushSliceToArena<Vector3>(arena, vertsCount);
+    mesh.triangles = PushSliceToArena<int>(arena, trianglesCount);
 
     float offset = meshSize / 2.0f - 0.5f;
 
@@ -751,7 +751,7 @@ Mesh CreatePlaneMesh() {
 }
 
 
-Mesh CreateUVSphereMesh()
+Mesh CreateUVSphereMesh(MemoryArena* arena)
 {
     Mesh mesh = {};
 
@@ -760,9 +760,9 @@ Mesh CreateUVSphereMesh()
     int vertsCount     = (meshSize - 1) * meshSize + 2;
     int trianglesCount = (meshSize - 1) * (meshSize - 1) * 6 + 2 * ((meshSize - 1) * 3);
 
-    mesh.vertices  = AllocateSlice<Vector3>(vertsCount);
-    mesh.normals   = AllocateSlice<Vector3>(vertsCount);
-    mesh.triangles = AllocateSlice<int>(trianglesCount);
+    mesh.vertices  = PushSliceToArena<Vector3>(arena, vertsCount);
+    mesh.normals   = PushSliceToArena<Vector3>(arena, vertsCount);
+    mesh.triangles = PushSliceToArena<int>(arena, trianglesCount);
 
     int index = 0;
     mesh.vertices[index++] = {0, 1, 0};

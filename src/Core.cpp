@@ -15,7 +15,6 @@ void GLFWErrorCallback(int, const char *);
 void OGLMessageCallback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam );
 
 SRWindow* InitializeWindow(Str8 name, int width, int height) {
-    // @TODO: expose width and height to use code
     windowInstance.width = width;
     windowInstance.height = height;
 
@@ -40,7 +39,9 @@ SRWindow* InitializeWindow(Str8 name, int width, int height) {
     glfwSetFramebufferSizeCallback(windowInstance.glfwWin, ResizeCallback);
     glfwSetErrorCallback(GLFWErrorCallback);
 
-    windowInstance.tempArena = CreateArena();
+    // Memory
+    windowInstance.tempArena       = CreateArena();
+    windowInstance.persistentArena = CreateArena();
 
     // GL Init
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))

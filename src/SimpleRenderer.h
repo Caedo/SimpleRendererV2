@@ -320,6 +320,8 @@ struct GLState {
 
 struct SRWindow {
     GLFWwindow* glfwWin;
+
+    MemoryArena persistentArena;
     MemoryArena tempArena;
 
     RenderState state;
@@ -508,10 +510,10 @@ void SetUniformColor(Shader shader, char *name, Vector4 value);
 void ApplyMesh(Mesh* mesh);
 void FreeMesh(Mesh* mesh);
 
-Mesh CreateQuadMesh();
-Mesh CreateCubeMesh();
-Mesh CreatePlaneMesh();
-Mesh CreateUVSphereMesh();
+Mesh CreateQuadMesh(MemoryArena* arena);
+Mesh CreateCubeMesh(MemoryArena* arena);
+Mesh CreatePlaneMesh(MemoryArena* arena);
+Mesh CreateUVSphereMesh(MemoryArena* arena);
 
 void CalculateNormals(Mesh* mesh);
 

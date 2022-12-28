@@ -15,7 +15,7 @@ int main()
     Str8 text = Str8Lit("Simple Renderer");
     int textWidth = MeasureStringWidth(text, font);
 
-    Mesh cube = CreateCubeMesh();
+    Mesh cube = CreateCubeMesh(&window->persistentArena);
     UseShader(window, VertexColorShader);
 
     Matrix cubeTransform = MatrixIdentity();

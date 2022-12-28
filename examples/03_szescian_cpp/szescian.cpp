@@ -5,7 +5,7 @@
 int main() {
     SRWindow* window = InitializeWindow(Str8Lit("Szescian.cpp"));
 
-    Mesh mesh = CreateCubeMesh();
+    Mesh mesh = CreateCubeMesh(&window->persistentArena);
 
     Camera camera = CreatePerspective(90, 0.01f, 1000.0f, (float)window->width / window->height);
     camera.position.x = -2;
