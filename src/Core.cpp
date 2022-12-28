@@ -66,6 +66,8 @@ SRWindow* InitializeWindow(Str8 name, int width, int height) {
     assert(VertexColorShader.isValid);
     assert(ScreenSpaceShader.isValid);
 
+    UseShader(&windowInstance, ErrorShader);
+
     // Error textures
     glGenTextures(1, &ErrorTexture.id);
     glBindTexture(GL_TEXTURE_2D, ErrorTexture.id);
@@ -84,8 +86,8 @@ SRWindow* InitializeWindow(Str8 name, int width, int height) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    InitBatch(&windowInstance.screenSpaceBatch);
-    UseShader(&windowInstance, ErrorShader);
+    ///
+    InitBatch(&windowInstance.batch);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -157,8 +159,6 @@ void FrameStart(SRWindow* window) {
 void FrameEnd(SRWindow* window) {
     assert(window->state == Frame);
     window->state = FrameEnded;
-
-    RenderBatch(window, &window->screenSpaceBatch);
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -311,7 +311,7 @@ void ShowFrameTime(SRWindow* window, Vector2 position) {
 //========================================
 // Batch
 // =======================================
-void InitBatch(Batch* batch) {
+void InitBatch(BatchBuffer* batch) {
     glGenVertexArrays(1, &batch->VAO);
     glBindVertexArray(batch->VAO);
 
@@ -332,48 +332,44 @@ void InitBatch(Batch* batch) {
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glGenTextures(1, &batch->whiteTextureId);
-    glBindTexture(GL_TEXTURE_2D, batch->whiteTextureId);
+    // glGenTextures(1, &batch->whiteTextureId);
+    // glBindTexture(GL_TEXTURE_2D, batch->whiteTextureId);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    uint8_t data[] = {
-        255, 255, 255, 255,
-        255, 255, 255, 255,
-        255, 255, 255, 255,
-        255, 255, 255, 255
-    };
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    // uint8_t data[] = {
+    //     255, 255, 255, 255,
+    //     255, 255, 255, 255,
+    //     255, 255, 255, 255,
+    //     255, 255, 255, 255
+    // };
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void AddBatchVertex(SRWindow* window, Batch* batch, Vector3 pos) {
+void AddBatchVertex(BatchBuffer* batch, Vector3 pos) {
     BatchVertex v = {
         pos,
         {0, 0},
         {1, 1, 1, 1}
     };
 
-    AddBatchVertex(window, batch, v);
+    AddBatchVertex(batch, v);
 }
 
-void AddBatchVertex(SRWindow* window, Batch* batch, BatchVertex v) {
-    if(batch->currentSize + 1 >= BATCH_MAX_SIZE) {
-        RenderBatch(window, batch);
-    }
+void AddBatchVertex(BatchBuffer* batch, BatchVertex v) {
+    assert(batch->currentSize + 1 < BATCH_MAX_SIZE);
 
     batch->vertices[batch->currentSize] = v;
     batch->currentSize++;
 }
 
-void AddBatchVertices(SRWindow* window, Batch* batch, Slice<BatchVertex> vertices) {
-    if(batch->currentSize + vertices.length >= BATCH_MAX_SIZE) {
-        RenderBatch(window, batch);
-    }
+void AddBatchVertices(BatchBuffer* batch, Slice<BatchVertex> vertices) {
+    assert(batch->currentSize + vertices.length < BATCH_MAX_SIZE);
 
     size_t index = batch->currentSize;
     for(int i = 0; i < vertices.length; i++) {
@@ -381,14 +377,6 @@ void AddBatchVertices(SRWindow* window, Batch* batch, Slice<BatchVertex> vertice
     }
 
     batch->currentSize = index;
-}
-
-void SetBatchTexture(SRWindow* window, Batch* batch, uint32_t textureId) {
-    if(batch->usedTextureId != textureId) {
-        RenderBatch(window, batch);
-    }
-
-    batch->usedTextureId = textureId;
 }
 
 //========================================

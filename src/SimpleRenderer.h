@@ -290,14 +290,9 @@ struct BatchVertex {
 
 // @NOTE @TODO eyeballing this value, check if it's enought or to much
 #define BATCH_MAX_SIZE 1024
-struct Batch {
+struct BatchBuffer {
     size_t currentSize;
     BatchVertex vertices[BATCH_MAX_SIZE];
-
-    uint32_t whiteTextureId;
-    uint32_t usedTextureId;
-
-    uint32_t shaderId;
 
     uint32_t VAO;
     uint32_t VBO;
@@ -309,9 +304,13 @@ enum RenderState {
     FrameEnded
 };
 
-#define GL_STACK_SIZE 16
-struct GLState {
+// @NOTE: used to save current GL state
+// so it can be restored after Screen Space
+// functions finish rendering
+struct ScreenSpaceContext {
     Shader shader;
+
+    GLuint textureId;
 
     bool faceCulling;
     bool depthTest;
@@ -325,6 +324,16 @@ struct SRWindow {
     MemoryArena tempArena;
 
     RenderState state;
+
+    // GL state
+    bool faceCulling;
+    bool depthTest;
+    bool blending;
+
+    Shader currentShader;
+
+    // @NOTE @TODO: it is enough to store only id?
+    GLuint currentTextureId;
 
     FrameTimeData frameTimeData;
 
@@ -346,10 +355,8 @@ struct SRWindow {
 
     Input input;
 
-    int glStateIndex;
-    GLState glStateStack[GL_STACK_SIZE];
-
-    Batch screenSpaceBatch;
+    // @Note: Used mainly for text and screen space rendering
+    BatchBuffer batch;
 
     bool resizedThisFrame;
 };
@@ -454,22 +461,16 @@ void ShowFrameTime(SRWindow* window, Vector2 position);
 //========================================
 // Batch
 // =======================================
-void InitBatch(Batch* batch);
-void AddBatchVertex(SRWindow* window, Batch* batch, Vector2 pos);
-void AddBatchVertex(SRWindow* window, Batch* batch, BatchVertex v);
-void AddBatchVertices(SRWindow* window, Batch*, Slice<BatchVertex> vertices);
+void InitBatch(BatchBuffer* batch);
+void AddBatchVertex(BatchBuffer* batch, Vector2 pos);
+void AddBatchVertex(BatchBuffer* batch, BatchVertex v);
+void AddBatchVertices(BatchBuffer*, Slice<BatchVertex> vertices);
 
-void SetBatchTexture(SRWindow* window, Batch* batch, uint32_t texture);
-
-void RenderBatch(SRWindow* window, Batch* batch);
+void RenderBatch(SRWindow* window, BatchBuffer* batch);
 
 //=========================================
 // GL state
 //=========================================
-
-void PushGLState(SRWindow* window, bool faceCulling, bool depthTest, bool blending, Shader shader);
-void SetGLState(SRWindow* window, GLState glState);
-GLState PopGLState(SRWindow* window);
 
 void FaceCulling(SRWindow* window, bool enabled);
 void DepthTest(SRWindow* window, bool enabled);

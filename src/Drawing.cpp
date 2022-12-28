@@ -126,43 +126,44 @@ void main() {
 //=========================================
 
 
-void PushGLState(SRWindow* window, bool faceCulling, bool depthTest, bool blending, Shader shader) {
-    window->glStateIndex += 1;
+// void PushGLState(SRWindow* window, bool faceCulling, bool depthTest, bool blending, Shader shader) {
+//     window->glStateIndex += 1;
 
-    FaceCulling(window, faceCulling);
-    DepthTest(window, depthTest);
-    Blending(window, blending);
-    UseShader(window, shader);
-}
+//     FaceCulling(window, faceCulling);
+//     DepthTest(window, depthTest);
+//     Blending(window, blending);
+//     UseShader(window, shader);
+// }
 
-void SetGLState(SRWindow* window, GLState glState) {
-    FaceCulling(window, glState.faceCulling);
-    DepthTest(window,   glState.depthTest);
-    Blending(window,    glState.blending);
-    UseShader(window,   glState.shader);
-}
+// void SetGLState(SRWindow* window, GLState glState) {
+//     FaceCulling(window, glState.faceCulling);
+//     DepthTest(window,   glState.depthTest);
+//     Blending(window,    glState.blending);
+//     UseShader(window,   glState.shader);
+// }
 
-GLState PopGLState(SRWindow* window) {
-    assert(window->glStateIndex > 0);
+// GLState PopGLState(SRWindow* window) {
+//     assert(window->glStateIndex > 0);
 
-    int idx = window->glStateIndex;
-    GLState ret = window->glStateStack[idx];
+//     int idx = window->glStateIndex;
+//     GLState ret = window->glStateStack[idx];
 
-    window->glStateIndex = idx - 1;
-    GLState* glState = &window->glStateStack[idx-1];
+//     window->glStateIndex = idx - 1;
+//     GLState* glState = &window->glStateStack[idx-1];
 
-    FaceCulling(window, glState->faceCulling);
-    DepthTest(window,   glState->depthTest);
-    Blending(window,    glState->blending);
-    UseShader(window,   glState->shader);
+//     FaceCulling(window, glState->faceCulling);
+//     DepthTest(window,   glState->depthTest);
+//     Blending(window,    glState->blending);
+//     UseShader(window,   glState->shader);
 
-    return ret;
-}
+//     return ret;
+// }
 
 void FaceCulling(SRWindow* window, bool enabled) {
     if(enabled) {
         glEnable(GL_CULL_FACE);
 
+        // @TODO: save this state in the window struct
         glCullFace(GL_BACK);
         glFrontFace(GL_CCW);
     }
@@ -170,7 +171,7 @@ void FaceCulling(SRWindow* window, bool enabled) {
         glDisable(GL_CULL_FACE);
     }
 
-    window->glStateStack[window->glStateIndex].faceCulling = enabled;
+    window->faceCulling = enabled;
 }
 
 void DepthTest(SRWindow* window, bool enabled) {
@@ -181,15 +182,13 @@ void DepthTest(SRWindow* window, bool enabled) {
         glDisable(GL_DEPTH_TEST);
     }
 
-    window->glStateStack[window->glStateIndex].depthTest = enabled;
+    window->depthTest = enabled;
 }
 
 
 void UseShader(SRWindow* window, Shader shader) {
-    uint32_t id = shader.isValid ? shader.id : ErrorShader.id;
-
-    window->glStateStack[window->glStateIndex].shader = shader;
-    glUseProgram(id);
+    window->currentShader = shader.isValid ? shader : ErrorShader;
+    glUseProgram(window->currentShader.id);
 }
 
 void ClearColorBuffer(Vector4 color) {
@@ -218,9 +217,10 @@ void Blending(SRWindow* window, bool enabled) {
         glDisable(GL_BLEND);
     }
 
-    window->glStateStack[window->glStateIndex].blending = enabled;
+    window->blending = enabled;
 }
 
+// @TODO: save this state to window struct
 void SetBlendingAlphaBlend(SRWindow* window) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -387,12 +387,8 @@ void UnloadShader(Shader* shader) {
     shader->id = -1;
 }
 
-Shader GetActiveShader(SRWindow* window) {
-    return window->glStateStack[window->glStateIndex].shader;
-}
-
 void SetShaderUniform(SRWindow* window, char *name, int value) {
-    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    int loc = glGetUniformLocation(window->currentShader.id, name);
     if (loc != -1) {
         glUniform1i(loc, value);
     }
@@ -403,7 +399,7 @@ void SetShaderUniform(SRWindow* window, char *name, int value) {
 }
 
 void SetShaderUniform(SRWindow* window, char *name, float value) {
-    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    int loc = glGetUniformLocation(window->currentShader.id, name);
     if (loc != -1)
     {
         glUniform1f(loc, value);
@@ -415,7 +411,7 @@ void SetShaderUniform(SRWindow* window, char *name, float value) {
 }
 
 void SetShaderUniform(SRWindow* window, char *name, Vector2 value) {
-    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    int loc = glGetUniformLocation(window->currentShader.id, name);
     if(loc != -1) {
         glUniform2f(loc, value.x, value.y);
     }
@@ -426,7 +422,7 @@ void SetShaderUniform(SRWindow* window, char *name, Vector2 value) {
 }
 
 void SetShaderUniform(SRWindow* window, char *name, Vector3 value){
-    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    int loc = glGetUniformLocation(window->currentShader.id, name);
     if (loc != -1) {
         glUniform3f(loc, value.x, value.y, value.z);
     }
@@ -437,7 +433,7 @@ void SetShaderUniform(SRWindow* window, char *name, Vector3 value){
 }
 
 void SetShaderUniform(SRWindow* window, char *name, Vector4 value) {
-    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    int loc = glGetUniformLocation(window->currentShader.id, name);
     if (loc != -1) {
         // glUniform4f(loc, value.x, value.y, value.z, value.w);
         glUniform4fv(loc, 1, (const float *)(&value));
@@ -449,7 +445,7 @@ void SetShaderUniform(SRWindow* window, char *name, Vector4 value) {
 }
 
 void SetShaderUniform(SRWindow* window, char* name, Matrix value) {
-    int loc = glGetUniformLocation(GetActiveShader(window).id, name);
+    int loc = glGetUniformLocation(window->currentShader.id, name);
     if (loc != -1) {
         // glUniform4f(loc, value.x, value.y, value.z, value.w);
         glUniformMatrix4fv(loc, 1, false, (const float *)(&value));
@@ -921,9 +917,18 @@ Texture LoadTextureFromMemory(Slice<char> memory) {
     return ret;
 }
 
-void BindTexture(Texture texture) {
+void BindTexture(SRWindow* window, Texture texture) {
     // @TODO: add texture units
+    // @TODO: add error texture
+    window->currentTextureId = texture.id;
     glBindTexture(GL_TEXTURE_2D, texture.id);
+}
+
+
+void BindTexture(SRWindow* window, GLuint textureId) {
+    // @TODO: add texture units
+    window->currentTextureId = textureId;
+    glBindTexture(GL_TEXTURE_2D, textureId);
 }
 
 //========================================
@@ -938,7 +943,7 @@ void BindTexture(Texture texture) {
 // }
 
 void DrawMesh(SRWindow* window, Mesh mesh, Matrix transform) {
-    uint32_t shaderId = window->glStateStack[window->glStateIndex].shader.id;
+    uint32_t shaderId = window->currentShader.id;
     uint32_t mvpLoc = glGetUniformLocation(shaderId, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&transform));
@@ -952,7 +957,7 @@ void DrawMesh(SRWindow* window, Mesh mesh, Camera camera, Matrix transform) {
     Matrix view = GetView(&camera);
     Matrix mvp = projection * view * transform;
 
-    uint32_t shaderId = window->glStateStack[window->glStateIndex].shader.id;
+    uint32_t shaderId = window->currentShader.id;
     uint32_t mvpLoc = glGetUniformLocation(shaderId, "MVP");
     if(mvpLoc != -1)
         glUniformMatrix4fv(mvpLoc, 1, false, (const float *)(&mvp));
@@ -964,25 +969,10 @@ void DrawMesh(SRWindow* window, Mesh mesh, Camera camera, Matrix transform) {
 //========================================
 // Batch
 //========================================
-void RenderBatch(SRWindow* window, Batch* batch) {
+void RenderBatch(SRWindow* window, BatchBuffer* batch) {
     if(batch->currentSize == 0) {
         return;
     }
-
-    PushGLState(
-        window, 
-        false,            // face culling
-        false,           // depth test
-        true,            // blending
-        ScreenSpaceShader// shder
-    );
-
-    SetBlendingAlphaBlend(window);
-
-    glUniform1i(glGetUniformLocation(ScreenSpaceShader.id, "framebufferWidth"), window->width);
-    glUniform1i(glGetUniformLocation(ScreenSpaceShader.id, "framebufferHeight"), window->height);
-
-    glBindTexture(GL_TEXTURE_2D, batch->usedTextureId);
 
     glBindVertexArray(batch->VAO);
     glBindBuffer(GL_ARRAY_BUFFER, batch->VBO);
@@ -990,20 +980,50 @@ void RenderBatch(SRWindow* window, Batch* batch) {
 
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei) batch->currentSize);
 
+    // @NOTE @TODO: maybe clearing batch should be done manually?
     batch->currentSize = 0;
-    batch->usedTextureId = batch->whiteTextureId;
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    PopGLState(window);
 }
 
 //========================================
 // Screen Space drawing
 //========================================
+ScreenSpaceContext BeginScreenSpace(SRWindow* window) {
+    ScreenSpaceContext ret = {};
+
+    ret.shader      = window->currentShader;
+    ret.textureId   = window->currentTextureId;
+    ret.faceCulling = window->faceCulling;
+    ret.depthTest   = window->depthTest;
+    ret.blending    = window->blending;
+
+    ///
+
+    UseShader(window, ScreenSpaceShader);
+    FaceCulling(window, false);
+    DepthTest(window, false);
+    Blending(window, true);
+
+    SetBlendingAlphaBlend(window);
+
+    glUniform1i(glGetUniformLocation(ScreenSpaceShader.id, "framebufferWidth"), window->width);
+    glUniform1i(glGetUniformLocation(ScreenSpaceShader.id, "framebufferHeight"), window->height);
+
+    return ret;
+}
+
+void EndScreenSpace(SRWindow* window, ScreenSpaceContext ctx) {
+    UseShader(window, ctx.shader);
+    FaceCulling(window, ctx.faceCulling);
+    DepthTest(window, ctx.depthTest);
+    Blending(window, ctx.blending);
+
+    BindTexture(window, ctx.textureId);
+
+    // @TODO: restore blending function
+}
+
 void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
-    Batch* batch = &window->screenSpaceBatch;
-    SetBatchTexture(window, batch, batch->whiteTextureId);
+    ScreenSpaceContext ctx = BeginScreenSpace(window);
 
     float left  = rect.x;
     float right = rect.x + rect.width;
@@ -1019,12 +1039,15 @@ void DrawRect(SRWindow* window, Rect rect, Vector4 color) {
     vertices[4] = {{right, bot, 0}, {1, 1}, color};
     vertices[5] = {{left,  bot, 0}, {0, 1}, color};
 
-    AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
+    AddBatchVertices(&window->batch, MakeSlice(vertices, 0, 6));
+    RenderBatch(window, &window->batch);
+
+    EndScreenSpace(window, ctx);
 }
 
 void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 origin) {
-    Batch* batch = &window->screenSpaceBatch;
-    SetBatchTexture(window, batch, texture.id);
+    ScreenSpaceContext ctx = BeginScreenSpace(window);
+    BindTexture(window, texture);
 
     float left  = position.x - texture.width * origin.x;
     float right = position.x + texture.width * (1 - origin.x);
@@ -1040,12 +1063,15 @@ void DrawTexture(SRWindow* window, Texture texture, Vector2 position, Vector2 or
     vertices[4] = {{right, bot, 0}, {1, 1}, {1, 1, 1, 1}};
     vertices[5] = {{left,  bot, 0}, {0, 1}, {1, 1, 1, 1}};
 
-    AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
+    AddBatchVertices(&window->batch, MakeSlice(vertices, 0, 6));
+    RenderBatch(window, &window->batch);
+
+    EndScreenSpace(window, ctx);
 }
 
 void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect destination, Vector4 color) {
-    Batch* batch = &window->screenSpaceBatch;
-    SetBatchTexture(window, batch, texture.id);
+    ScreenSpaceContext ctx = BeginScreenSpace(window);
+    BindTexture(window, texture);
 
     float left  = destination.x;
     float right = destination.x + destination.width;
@@ -1067,7 +1093,10 @@ void DrawTextureFragment(SRWindow* window, Texture texture, Rect source, Rect de
     vertices[4] = {{right, bot, 0}, {uvRight, uvBot}, color};
     vertices[5] = {{left,  bot, 0}, {uvLeft,  uvBot}, color};
 
-    AddBatchVertices(window, batch, MakeSlice(vertices, 0, 6));
+    AddBatchVertices(&window->batch, MakeSlice(vertices, 0, 6));
+    RenderBatch(window, &window->batch);
+
+    EndScreenSpace(window, ctx);
 }
 
 //========================================
