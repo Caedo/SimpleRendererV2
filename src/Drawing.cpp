@@ -1358,6 +1358,9 @@ Vector4 GetUniformValueBVec4(Material* material, Str8 name) {
 void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position, Vector4 color) {
     float startPositionX = position.x;
 
+    ScreenSpaceContext ctx = BeginScreenSpace(window);
+    BindTexture(window, font.atlas);
+
     for(int i = 0; i < text.length;) {
         if(text.str[i] == '\n') {
             position.y += font.size;
@@ -1372,14 +1375,31 @@ void DrawString(SRWindow* window, Str8 text, Font font, Vector2 position, Vector
         i += advance;
 
         GlyphData glyph = font.glyphData[glyphIndex];
-        Rect dest = {
-            position.x + glyph.xOffset,
-            position.y + glyph.yOffset,
-            (float) glyph.pixelWidth,
-            (float) glyph.pixelHeight
-        };
 
-        DrawTextureFragment(window, font.atlas, glyph.atlasRect, dest, color);
+        float left  = position.x + glyph.xOffset;
+        float right = position.x + glyph.xOffset + (float) glyph.pixelWidth;
+        float top   = position.y + glyph.yOffset;
+        float bot   = position.y + glyph.yOffset + (float) glyph.pixelHeight;
+
+        float uvLeft  = glyph.atlasRect.x;
+        float uvRight = glyph.atlasRect.x + glyph.atlasRect.width;
+        float uvTop   = glyph.atlasRect.y;
+        float uvBot   = glyph.atlasRect.y + glyph.atlasRect.height;
+
+        BatchVertex vertices[6];
+        vertices[0] = {{left,  top, 0}, {uvLeft,  uvTop}, color};
+        vertices[1] = {{right, top, 0}, {uvRight, uvTop}, color};
+        vertices[2] = {{right, bot, 0}, {uvRight, uvBot}, color};
+
+        vertices[3] = {{left,  top, 0}, {uvLeft,  uvTop}, color};
+        vertices[4] = {{right, bot, 0}, {uvRight, uvBot}, color};
+        vertices[5] = {{left,  bot, 0}, {uvLeft,  uvBot}, color};
+
+        AddBatchVertices(&window->batch, MakeSlice(vertices, 0, 6));
+
         position.x += glyph.advanceX;
     }
+
+    RenderBatch(window, &window->batch);
+    EndScreenSpace(window, ctx);
 }
