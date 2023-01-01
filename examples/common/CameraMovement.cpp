@@ -20,17 +20,17 @@
 #endif
 
 void MoveCamera(Camera* camera, SRWindow* window) {
-    float forward = IsKeyDown(window, KEY_W) ?  1 :
-                    IsKeyDown(window, KEY_S) ? -1 :
-                                                0;
+    float forward = IsKeyDown(window, KEY_W) ?  1.0f :
+                    IsKeyDown(window, KEY_S) ? -1.0f :
+                                                0.0f;
 
-    float right = IsKeyDown(window, KEY_D) ?  1 :
-                  IsKeyDown(window, KEY_A) ? -1 :
-                                              0;
+    float right = IsKeyDown(window, KEY_D) ?  1.0f :
+                  IsKeyDown(window, KEY_A) ? -1.0f :
+                                              0.0f;
 
-    float up = IsKeyDown(window, KEY_SPACE)      ?  1 :
-               IsKeyDown(window, KEY_LEFT_SHIFT) ? -1 :
-                                                    0;
+    float up = IsKeyDown(window, KEY_SPACE)      ?  1.0f :
+               IsKeyDown(window, KEY_LEFT_SHIFT) ? -1.0f :
+                                                    0.0f;
 
     Vector2 input = Vector2Normalize(Vector2{forward, right});
     input.x *= CAMERA_SPEED_X * window->timeDelta;

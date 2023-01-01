@@ -2,13 +2,15 @@
 #include "../../src/unity.cpp"
 #endif
 
+#include "../common/CameraMovement.cpp"
+
 int main() {
     SRWindow* window = InitializeWindow(Str8Lit("Hello Quad"));
 
     // SimpleRenderer implements several prymitives that can 
     // be used for prototyping. That includes cubes, spheres, planes. etc,
     // Here we create cube mesh, which will be used to render several objects
-    Mesh mesh = CreateCubeMesh();
+    Mesh mesh = CreateCubeMesh(&window->persistentArena);
     UseShader(window, VertexColorShader);
 
     // In the previous example I mentioned that GPU only renders vertices that are
@@ -36,14 +38,18 @@ int main() {
 
     // Here we create camera struct with Field of View of 75 degrees, near plane set to 0.01f, far plane to 1000,
     // and apect ration to aspect of our window.
-    Camera camera = CreatePerspective(75, 0.01f, 1000.0f, (float) window->width / window->height);
+    Camera camera = CreatePerspective(75, 0.01f, 10.0f, (float) window->width / window->height);
     camera.position.x = -8;
 
     FaceCulling(window, true);
+    DepthTest(window, true);
 
     while(ShouldClose(window) == false) {
         FrameStart(window);
 
+        MoveCamera(&camera, window);
+
+        ClearDepthBuffer();
         ClearColorBuffer({0.8f, 0.8f, 0.8f, 0.f});
 
         for(int i = 0; i < 8; i++) {

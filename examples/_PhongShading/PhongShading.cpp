@@ -11,8 +11,8 @@ int main() {
     camera.position.x = -5;
     camera.position.y = 4;
 
-    Mesh sphere = CreateUVSphereMesh();
-    Mesh plane = CreatePlaneMesh();
+    Mesh sphere = CreateUVSphereMesh(&window->persistentArena);
+    Mesh plane = CreatePlaneMesh(&window->persistentArena);
 
     Matrix sphereTransform = MatrixTranslate(0, 2, 0);
     Matrix planeTransform = MatrixScale(3, 1, 3);
