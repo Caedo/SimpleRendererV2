@@ -917,17 +917,19 @@ Texture LoadTextureFromMemory(Slice<char> memory) {
     return ret;
 }
 
-void BindTexture(SRWindow* window, Texture texture) {
+void BindTexture(SRWindow* window, Texture texture, uint32_t unit) {
     // @TODO: add texture units
     // @TODO: add error texture
     window->currentTextureId = texture.id;
+    glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, texture.id);
 }
 
 
-void BindTexture(SRWindow* window, GLuint textureId) {
+void BindTexture(SRWindow* window, GLuint textureId, uint32_t unit) {
     // @TODO: add texture units
     window->currentTextureId = textureId;
+    glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, textureId);
 }
 
@@ -1130,6 +1132,7 @@ void AddUniform(Material* material, Str8 name, UniformType type, UniformValue va
 void UseMaterial(SRWindow* window, Material* material) {
     UseShader(window, material->shader);
 
+    int currentTextureUnit = 0;
     for(int i = 0; i < material->uniformsCount; i++) {
         Uniform* uniform = material->uniforms + i;
         switch(uniform->type) {
@@ -1154,6 +1157,15 @@ void UseMaterial(SRWindow* window, Material* material) {
             case UniformType::BVec4: glUniform1iv(uniform->location, 1, (const GLint*) &uniform->value);  break;
             
             case UniformType::Mat4:  glUniformMatrix4fv(uniform->location, 1, false, (const GLfloat*) &uniform->value);  break;
+
+            case UniformType::Texture2D: {
+                glUniform1i(uniform->location, currentTextureUnit);
+                glActiveTexture(GL_TEXTURE0 + currentTextureUnit);
+                glBindTexture(GL_TEXTURE_2D, uniform->value.texture);
+
+                currentTextureUnit += 1;
+            }
+            break;
         }
     }
 }
@@ -1178,6 +1190,12 @@ UniformValue UValue(Matrix mat) {
     UniformValue u;
     u.matrix = mat;
 
+    return u;
+}
+
+UniformValue UValue(Texture texture) {
+    UniformValue u;
+    u.texture = texture.id;
     return u;
 }
 

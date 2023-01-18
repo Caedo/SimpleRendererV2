@@ -408,7 +408,8 @@ enum class UniformType {
     // Mat3x2,
     // Mat3x4,
     // Mat4x2,
-    // Mat4x3
+    // Mat4x3,
+    Texture2D,
 };
 
 union UniformValue {
@@ -523,7 +524,9 @@ void CalculateNormals(Mesh* mesh);
 //========================================
 Texture LoadTextureAtPath(char* path, MemoryArena* arena);
 Texture LoadTextureFromMemory(Slice<char> mem);
-void BindTexture(Texture texture);
+
+void BindTexture(SRWindow* window, Texture texture, uint32_t unit = 0);
+void BindTexture(SRWindow* window, GLuint textureId, uint32_t unit = 0);
 
 //========================================
 // Drawing
